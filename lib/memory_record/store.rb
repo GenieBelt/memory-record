@@ -1,4 +1,9 @@
 module MemoryRecord
+  class NoIdError < Exception
+    def initialize(object)
+      super "Cannot store object #{object} - missing id."
+    end
+  end
   class Store
     def initialize
       @internal_lock = Mutex.new
@@ -24,6 +29,7 @@ module MemoryRecord
     # @return [Object]
     def store(object)
       id = object.send id_key
+      raise NoIdError.new(object) unless id
       synchronize do
         @store[id] = object
         @foreign_keys.keys.each do |key|
