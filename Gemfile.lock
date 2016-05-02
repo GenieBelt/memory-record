@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    memoryrecord (0.1.0)
+    memory_record (0.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -13,7 +13,7 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.11)
-  memoryrecord!
+  memory_record!
   rake (~> 10.0)
 
 BUNDLED WITH

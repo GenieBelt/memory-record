@@ -1,7 +1,7 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'memoryrecord/version'
+require 'memory_record/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'memory_record'
@@ -9,9 +9,9 @@ Gem::Specification.new do |spec|
   spec.authors       = ['Kacper Kawecki']
   spec.email         = ['kacper@geniebelt.com']
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = %q{Simple indexed in-memory storage for objects}
+  spec.description   = %q{Allows storing objects with index based on their class and primary/foreign keys}
+  spec.homepage      = 'https://github.com/GenieBelt/memory-record'
   spec.license       = 'MIT'
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
