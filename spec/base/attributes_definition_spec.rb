@@ -49,4 +49,12 @@ describe 'Attributes Definition' do
     foo.id = 2
     expect(foo.foo_id).to eq 2
   end
+
+  it 'should return proper attributes names list' do
+    Foo.class_eval do
+      attributes :foo_id, :test
+    end
+
+    expect(Foo.new.attribute_names).to include 'foo_id', 'test'
+  end
 end

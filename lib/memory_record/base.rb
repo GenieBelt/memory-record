@@ -102,7 +102,7 @@ module MemoryRecord
 
     # @return [Array<String>]
     def attribute_names
-      self.attribute_names.map(&:to_s)
+      self.class.attribute_names.map(&:to_s)
     end
 
 
