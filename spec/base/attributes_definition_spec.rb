@@ -57,4 +57,13 @@ describe 'Attributes Definition' do
 
     expect(Foo.new.attribute_names).to include 'foo_id', 'test'
   end
+
+  it 'should return attributes list for serializations' do
+    Foo.class_eval do
+      attributes :foo_id, :test
+    end
+
+    expect(Foo.new.attributes.keys).to include 'foo_id', 'test'
+    expect(Foo.new.attributes.values.compact).to be_empty
+  end
 end

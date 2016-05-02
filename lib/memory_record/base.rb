@@ -193,7 +193,7 @@ module MemoryRecord
     end
 
     def to_s
-      "#{self.class}##{self.id}"
+      "#{self.class}##{self.id}(#{attribute_names.join(', ')})"
     end
 
     def attributes
