@@ -5,6 +5,7 @@ require 'active_model'
 require 'memory_record/store'
 module MemoryRecord
   class RecordNotSaved < Exception; end
+  class RecordNotCommitted <  Exception; end
   class Base
     # noinspection RubyClassVariableUsageInspection
     @@main_store = MainStore.new
@@ -126,7 +127,7 @@ module MemoryRecord
     define_model_callbacks :commit
 
     def commit(transaction, values)
-      raise unless transaction.kind_of?(Transaction) || transaction ==self
+      raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction) || transaction ==self
       run_callbacks(:commit) do
         self.attribute_list = values
       end
@@ -166,6 +167,12 @@ module MemoryRecord
       !(id && self.class.class_store.get(id))
     end
 
+    def destroyed?
+      synchronize do
+        !!@destroyed
+      end
+    end
+
     def lock!
       @mutex.lock unless @mutex.owned?
     end
@@ -182,14 +189,21 @@ module MemoryRecord
         if current_transaction
           current_transaction.destroy self
         else
-          commit_destroy
+          commit_destroy(self)
         end
       end
     end
 
-    def commit_destroy
+    def commit_destroy(transaction)
+      raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction) || transaction ==self
+      self.attribute_list = values
       self.temp_attribute_list = nil
+      self.synchronize do
+        @destroyed = true
+      end
       self.class.class_store.remove(self)
+    ensure
+      unlock!
     end
 
     def to_s

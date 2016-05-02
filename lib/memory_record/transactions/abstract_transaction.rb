@@ -37,7 +37,7 @@ module MemoryRecord
         object.commit(self, values)
       end
       @destroy_objects.each do |object|
-        object.commit_destroy
+        object.commit_destroy(self)
       end
     end
   end
