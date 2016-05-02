@@ -1,5 +1,46 @@
 module MemoryRecord
   module Attributes
+    module ClassMethods
+      # @return [Hash]
+      def attributes_types
+        @attributes_types || Hash.new
+      end
+
+      # @return [Array<Symbol>]
+      def attribute_names
+        @attributes || Array.new
+      end
+
+      private
+
+      # Define attributes methods
+      def attributes(*args)
+        if args.first.is_a? Hash
+          @attributes_types = attributes_types.merge args.first
+          @attributes = (attribute_names + args.first.keys).uniq
+        else
+          @attributes = (attribute_names + args).uniq
+        end
+        @attributes.each do |name|
+          define_attribute_methods name
+          class_eval <<-METHOD
+  def #{name}
+    read_attribute(:#{name})
+  end
+
+  def #{name}=(value)
+    value = cast_attribute(:#{name}, value)
+    write_attribute('#{name}', value)
+  end
+          METHOD
+        end
+      end
+    end
+
+    def self.included(base)
+      base.extend ClassMethods
+    end
+
     def attributes
       attributes = Hash.new
       attribute_names.each { |attribute| attributes[attribute] = nil }
@@ -12,13 +53,14 @@ module MemoryRecord
       end
     end
 
-# @return [Array<String>]
+    # @return [Array<String>]
     def attribute_names
       self.class.attribute_names.map(&:to_s)
     end
 
 
     private
+
     def temp_attribute_list=(value)
       Thread.current[:MemoryRecordBase] ||= Hash.new
       if value.nil?

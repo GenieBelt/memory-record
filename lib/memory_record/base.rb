@@ -20,17 +20,6 @@ module MemoryRecord
     include ActiveModel::Serialization
 
     class << self
-
-      # @return [Hash]
-      def attributes_types
-        @attributes_types || Hash.new
-      end
-
-      # @return [Array<Symbol>]
-      def attribute_names
-        @attributes || Array.new
-      end
-
       # @return [ObjectStore]
       def class_store
         # noinspection RubyClassVariableUsageInspection
@@ -61,29 +50,6 @@ module MemoryRecord
 
       def internal_lock
         @lock ||= Mutex.new
-      end
-
-      # Define attributes methods
-      def attributes(*args)
-        if args.first.is_a? Hash
-          @attributes_types = attributes_types.merge args.first
-          @attributes = (attribute_names + args.first.keys).uniq
-        else
-          @attributes = (attribute_names + args).uniq
-        end
-        @attributes.each do |name|
-          define_attribute_methods name
-          class_eval <<-METHOD
-  def #{name}
-    read_attribute(:#{name})
-  end
-
-  def #{name}=(value)
-    value = cast_attribute(:#{name}, value)
-    write_attribute('#{name}', value)
-  end
-            METHOD
-        end
       end
     end
 
