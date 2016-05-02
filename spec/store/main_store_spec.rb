@@ -9,7 +9,7 @@ describe MemoryRecord::MainStore do
   end
 
   it 'should initialize with no arguments' do
-    expect { MemoryRecord::MainStore.new }.no_to raise_error
+    expect { MemoryRecord::MainStore.new }.not_to raise_error
   end
 
   it 'should return object store for class' do

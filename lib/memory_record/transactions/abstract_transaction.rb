@@ -23,10 +23,10 @@ module MemoryRecord
 
     def rollback!
       @object_changes.keys.each do |object|
-        object.unlock!
+        object.unlock! if object.respond_to? :unlock!
       end
       @destroy_objects.each do |object|
-        object.unlock!
+        object.unlock! if object.respond_to? :unlock!
       end
       @object_changes = Hash.new
       @destroy_objects = []
