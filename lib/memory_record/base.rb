@@ -1,4 +1,5 @@
 require 'memory_record/base/cast'
+require 'memory_record/base/attributes'
 require 'memory_record/transactions/abstract_transaction'
 require 'memory_record/base/transactional'
 require 'active_model'
@@ -7,8 +8,8 @@ module MemoryRecord
   class RecordNotSaved < Exception; end
   class RecordNotCommitted <  Exception; end
   class Base
-    # noinspection RubyClassVariableUsageInspection
     @@main_store = MainStore.new
+    include MemoryRecord::Attributes # noinspection RubyClassVariableUsageInspection
     include MemoryRecord::Transactional
     include MemoryRecord::Cast
     include ActiveModel::AttributeMethods
@@ -101,11 +102,6 @@ module MemoryRecord
       write_attribute(id_key, value)
     end
 
-    # @return [Array<String>]
-    def attribute_names
-      self.class.attribute_names.map(&:to_s)
-    end
-
 
     def reload!
       self.temp_attribute_list = nil
@@ -130,6 +126,7 @@ module MemoryRecord
       raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction) || transaction ==self
       run_callbacks(:commit) do
         self.attribute_list = values
+        add_to_store
       end
     ensure
       unlock!
@@ -143,7 +140,7 @@ module MemoryRecord
         run_callbacks(new_record? ? :create : :update) do
           run_callbacks(:save) do
             persists_local_changes
-            add_to_store
+            add_to_store unless current_transaction
           end
         end
         self
@@ -155,12 +152,6 @@ module MemoryRecord
 
     def save!
       save || raise(MemoryRecord::RecordNotSaved.new "Record not saved! - #{self}")
-    end
-
-    def assign_attributes(params)
-      params.each do |key, value|
-        self.send "#{key}=", value
-      end
     end
 
     def new_record?
@@ -184,64 +175,48 @@ module MemoryRecord
     define_model_callbacks :destroy
 
     def destroy
-      run_callbacks(:save) do
-        self.temp_attribute_list = nil
-        if current_transaction
-          current_transaction.destroy self
-        else
-          commit_destroy(self)
-        end
+      run_callbacks(:destroy) do
+        delete
+      end
+    end
+
+    def delete
+      self.temp_attribute_list = nil
+      if current_transaction
+        current_transaction.destroy self
+      else
+        _delete
       end
     end
 
     def commit_destroy(transaction)
-      raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction) || transaction ==self
-      self.attribute_list = values
+      raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction)
+      _delete
+    end
+
+    def remove_from_store
+      self.class.class_store.remove(self)
+    end
+
+    def mark_as_deleted
       self.temp_attribute_list = nil
       self.synchronize do
         @destroyed = true
       end
-      self.class.class_store.remove(self)
-    ensure
-      unlock!
     end
 
     def to_s
       "#{self.class}##{self.id}(#{attribute_names.join(', ')})"
     end
 
-    def attributes
-      attributes = Hash.new
-      attribute_names.each { |attribute| attributes[attribute] = nil }
-      attributes
-    end
-
     private
 
-    def read_attribute(name)
-      _attribute_list[name.to_sym]
+    def _delete
+      mark_as_deleted
+      remove_from_store
+    ensure
+      unlock!
     end
-
-    def write_attribute(name, value)
-      return value if value == read_attribute(name)
-      _start_changes
-      self.send("#{name}_will_change!")
-      _attribute_list[name.to_sym] = value
-      value
-    end
-
-    def _start_changes
-      if current_transaction && current_transaction[self]
-        self.temp_attribute_list ||= Hash.new.merge(current_transaction[self])
-      else
-        self.temp_attribute_list ||= Hash.new.merge(@attribute_list)
-      end
-    end
-
-    def _attribute_list
-      temp_attribute_list || (current_transaction && current_transaction.changes(self)) || attribute_list
-    end
-
 
     def id_key
       key = nil
@@ -279,30 +254,6 @@ module MemoryRecord
       end
     end
 
-    def attribute_list=(new_list)
-      synchronize do
-        @attribute_list = new_list
-      end
-    end
 
-    def attribute_list
-      synchronize do
-        @attribute_list
-      end
-    end
-
-    def temp_attribute_list
-      Thread.current[:MemoryRecordBase] ||= Hash.new
-      Thread.current[:MemoryRecordBase][self]
-    end
-
-    def temp_attribute_list=(value)
-      Thread.current[:MemoryRecordBase] ||= Hash.new
-      if value.nil?
-        Thread.current[:MemoryRecordBase].delete(self)
-      else
-        Thread.current[:MemoryRecordBase][self] = value
-      end
-    end
   end
 end
