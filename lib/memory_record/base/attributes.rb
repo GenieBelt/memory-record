@@ -58,8 +58,7 @@ module MemoryRecord
       self.class.attribute_names.map(&:to_s)
     end
 
-
-    private
+    protected
 
     def temp_attribute_list=(value)
       Thread.current[:MemoryRecordBase] ||= Hash.new

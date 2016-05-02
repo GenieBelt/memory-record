@@ -83,7 +83,7 @@ module MemoryRecord
     end
 
     def persisted?
-      !!self.temp_attribute_list
+      !!((!self.temp_attribute_list) && self.id)
     end
 
     define_model_callbacks :commit
@@ -92,6 +92,7 @@ module MemoryRecord
       raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction) || transaction ==self
       run_callbacks(:commit) do
         self.attribute_list = values
+        self.temp_attribute_list = nil
         add_to_store
       end
     ensure
@@ -216,10 +217,8 @@ module MemoryRecord
     def add_to_store
       unless id
         self.attribute_list = self.attribute_list.merge(id: self.class.next_id)
-        self.class.class_store.class_store self
       end
+      self.class.class_store.store self
     end
-
-
   end
 end

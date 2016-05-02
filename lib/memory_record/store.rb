@@ -97,13 +97,13 @@ module MemoryRecord
     end
 
     def id_key
-      if @clazz.respond_to?(:id_key) && @clazz.id_key
-        @clazz.id_key.to_sym
+       if @clazz.respond_to?(:id_key) && @clazz.id_key
+        @clazz.id_key
       elsif @clazz.respond_to?(:primary_key) && @clazz.primary_key
-        @clazz.primary_key.to_sym
+        @clazz.primary_key
       else
         :id
-      end
+      end || :id
     end
   end
 
