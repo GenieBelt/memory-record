@@ -13,10 +13,11 @@ module MemoryRecord
   end
 
   class ObjectStore < Store
+    attr_reader :clazz
     def initialize(clazz)
       @clazz = clazz
       @foreign_keys = Hash.new
-      super
+      super()
     end
 
     # Store object
@@ -61,6 +62,7 @@ module MemoryRecord
             @foreign_keys[key][fk_id].delete object
           end
         end
+        @store.delete object.send(id_key)
       end
     end
 
