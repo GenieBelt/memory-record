@@ -20,7 +20,7 @@ describe MemoryRecord::ObjectStore do
       store = MemoryRecord::ObjectStore.new Foo
       foo = Foo.new
       foo.id = 1
-      store.store foo
+      store.class_store foo
       expect(store.all).to include foo
     end
 
@@ -28,7 +28,7 @@ describe MemoryRecord::ObjectStore do
       store = MemoryRecord::ObjectStore.new Foo
       foo = Foo.new
       foo.id = 1
-      store.store foo
+      store.class_store foo
 
       expect(store.get 1).to eq foo
     end
@@ -48,14 +48,14 @@ describe MemoryRecord::ObjectStore do
     it 'should be able to store object' do
       store = MemoryRecord::ObjectStore.new Foo
       foo = Foo.new foo_id: 1
-      store.store foo
+      store.class_store foo
       expect(store.all).to include foo
     end
 
     it 'should be able to get object by id' do
       store = MemoryRecord::ObjectStore.new Foo
       foo = Foo.new foo_id: 1
-      store.store foo
+      store.class_store foo
 
       expect(store.get 1).to eq foo
     end
@@ -75,14 +75,14 @@ describe MemoryRecord::ObjectStore do
     it 'should be able to store object' do
       store = MemoryRecord::ObjectStore.new Foo
       foo = Foo.new foo_id: 1
-      store.store foo
+      store.class_store foo
       expect(store.all).to include foo
     end
 
     it 'should be able to get object by id' do
       store = MemoryRecord::ObjectStore.new Foo
       foo = Foo.new foo_id: 1
-      store.store foo
+      store.class_store foo
 
       expect(store.get 1).to eq foo
     end
@@ -94,7 +94,7 @@ describe MemoryRecord::ObjectStore do
       class Foo < AttributedObject; end
     end
 
-    let(:store) { MemoryRecord::ObjectStore.new Foo }
+    let(:class_store) { MemoryRecord::ObjectStore.new Foo }
 
     it 'should be able to get by foreign key' do
       foo1 = Foo.new id: 1, bar_id: 1, user_id: 2

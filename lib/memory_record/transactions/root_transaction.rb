@@ -10,22 +10,15 @@ module MemoryRecord
     def child_transactions
       @child_transactions
     end
-  end
-
-  class ChildTransaction < RootTransaction
-    def initialize(parent)
-      super()
-      @parent = parent
-    end
 
     def commit!
-      @object_changes.each do |object, changes|
-        if @parent.changes(object)
-          @parent.changes.merge! changes
-        else
-          @parent.changes(object, changes)
-        end
-      end
+      @child_transactions.each { |t| t.commit! }
+      super
+    end
+
+    def rollback!
+      @child_transactions.each { |t| t.rollback! }
+      super
     end
   end
 end

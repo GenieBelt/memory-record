@@ -1,9 +1,11 @@
-require 'memory_record/transactions/abstract_transaction'
+require 'memory_record/transactions/root_transaction'
 module MemoryRecord
   class ChildTransaction < RootTransaction
+    # @param parent [MemoryRecord::RootTransaction]
     def initialize(parent)
       super()
       @parent = parent
+      @parent.child_transactions << self
     end
 
     def commit!
@@ -14,6 +16,12 @@ module MemoryRecord
           @parent[object] = changes
         end
       end
+      @parent.child_transactions.delete self
+    end
+
+    def rollback!
+      super
+      @parent.child_transactions.delete self
     end
   end
 end

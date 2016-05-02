@@ -1,5 +1,5 @@
 module MemoryRecord
-  module BaseCast
+  module Cast
     def cast_attribute(attr, value)
       if self.class.attributes_types[attr]
         #TODO cast types
