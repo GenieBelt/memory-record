@@ -52,13 +52,17 @@ module MemoryRecord
       end
     end
 
+    # Add index for foreign key
+    # @return [NilClass]
     def foreign_key(name)
       synchronize do
         @foreign_keys[name.to_sym] ||= Hash.new
       end
       reindex name.to_sym
+      nil
     end
 
+    # @return [Object, NilClass]
     def remove_object(object)
       synchronize do
         @foreign_keys.keys.each do |key|
@@ -74,12 +78,14 @@ module MemoryRecord
 
     alias_method :remove, :remove_object
 
+    # @return [Array<Object>]
     def all
       synchronize do
         @store.values
       end
     end
 
+    # @return [String]
     def to_s
       "Store for #{@clazz}. Stored objects: #{ @store.keys }"
     end

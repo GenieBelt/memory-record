@@ -51,6 +51,10 @@ module MemoryRecord
         class_store.get(id) || raise(RecordNotFound.new "Cannot find #{name} with id #{id}")
       end
 
+      def all
+        class_store.all
+      end
+
       private
 
       def internal_lock
@@ -184,6 +188,10 @@ module MemoryRecord
 
     def to_s
       "#{self.class}##{self.id}(#{attribute_names.join(', ')})"
+    end
+
+    def inspect
+      "#{self.class}##{self.id}(#{_attribute_list})"
     end
 
     private
