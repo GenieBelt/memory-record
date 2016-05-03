@@ -43,4 +43,29 @@ describe 'Base storing' do
     expect(foo.persisted?).to eq false
     expect(foo.new_record?).to eq true
   end
+
+  context 'multi-threaded' do
+    it 'should keep local changes per tread' do
+      foo = Foo.new bar: :test
+      foo.save
+      thread_bar = nil
+      foo.bar = :thread1
+      thread = Thread.new { thread_bar = foo.bar; foo.bar = :thread2 }
+      thread.join
+      expect(thread_bar).to eq :test
+      expect(foo.bar).to eq :thread1
+    end
+  end
+
+  context 'get methods' do
+    it 'should find existing object' do
+      foo = Foo.new bar: :test
+      foo.save
+      expect(Foo.find(foo.id)).to eq foo
+    end
+
+    it 'should raise error if object not found' do
+      expect { Foo.find(:x) }.to raise_error MemoryRecord::RecordNotFound
+    end
+  end
 end

@@ -7,6 +7,7 @@ require 'memory_record/store'
 module MemoryRecord
   class RecordNotSaved < Exception; end
   class RecordNotCommitted <  Exception; end
+  class RecordNotFound <  Exception; end
   class Base
     @@main_store = MainStore.new
     include MemoryRecord::Attributes # noinspection RubyClassVariableUsageInspection
@@ -44,6 +45,10 @@ module MemoryRecord
         object = self.new(params)
         object.save!
         object
+      end
+
+      def find(id)
+        class_store.get(id) || raise(RecordNotFound.new "Cannot find #{name} with id #{id}")
       end
 
       private
