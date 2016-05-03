@@ -107,7 +107,7 @@ module MemoryRecord
         run_callbacks(new_record? ? :create : :update) do
           run_callbacks(:save) do
             persists_local_changes
-            clean_dirty_attributes
+            _clean_dirty_attributes
             add_to_store unless current_transaction
           end
         end
@@ -138,6 +138,10 @@ module MemoryRecord
 
     def unlock!
       @mutex.unlock if @mutex.owned?
+    end
+
+    def locked?
+      @mutex.owned?
     end
 
     define_model_callbacks :destroy
@@ -232,7 +236,7 @@ module MemoryRecord
       self.temp_attribute_list = nil
     end
 
-    def  clean_dirty_attributes
+    def _clean_dirty_attributes
       if respond_to? :changes_applied
         changes_applied
       else
