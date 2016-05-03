@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'memory_record/base'
 
-describe 'Base dirty attributes' do
+describe 'Base -> Dirty attributes' do
 
   before(:each) do
     undefine_class :Foo

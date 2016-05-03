@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'memory_record/base'
 
-describe 'Base storing' do
+describe 'Base -> storing' do
 
   before(:each) do
     undefine_class :Foo
