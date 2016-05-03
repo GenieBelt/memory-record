@@ -90,6 +90,12 @@ module MemoryRecord
       "Store for #{@clazz}. Stored objects: #{ @store.keys }"
     end
 
+    def ids
+      synchronize do
+        @store.keys
+      end
+    end
+
     private
 
     def reindex(foreign_key)

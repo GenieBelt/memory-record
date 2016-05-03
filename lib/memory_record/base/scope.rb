@@ -90,6 +90,10 @@ module MemoryRecord
       apply_filters
     end
 
+    def ids
+      all.map(&:id)
+    end
+
     def add_filter(filter)
       @filters ||=[]
       @filters << filter

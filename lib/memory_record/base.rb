@@ -58,6 +58,10 @@ module MemoryRecord
         class_store.all
       end
 
+      def ids
+        class_store.ids
+      end
+
       private
 
       def internal_lock
