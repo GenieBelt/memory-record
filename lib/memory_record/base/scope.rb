@@ -6,6 +6,25 @@ module MemoryRecord
 
     module ClassMethods
 
+      def find(id)
+        class_store.get(id) || raise(RecordNotFound.new "Cannot find #{name} with id #{id}")
+      end
+
+      def with_id(id)
+        class_store.get(id)
+      end
+
+
+      # @return [Array<Object>]
+      def all
+        class_store.all
+      end
+
+      # @return [Array<Integer>]
+      def ids
+        class_store.ids
+      end
+
       # @return [MemoryRecord::SearchScope]
       def where(*args)
         scope_class.new.where(*args)

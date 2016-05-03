@@ -3,6 +3,7 @@ require 'memory_record/base/attributes'
 require 'memory_record/transactions/abstract_transaction'
 require 'memory_record/base/transactional'
 require 'memory_record/base/scope'
+require 'memory_record/base/locking'
 require 'active_model'
 require 'memory_record/store'
 module MemoryRecord
@@ -22,6 +23,7 @@ module MemoryRecord
     include MemoryRecord::Transactional
     include MemoryRecord::Cast
     include MemoryRecord::Scope
+    include MemoryRecord::Locking
 
     class << self
       # @return [ObjectStore]
@@ -48,22 +50,6 @@ module MemoryRecord
         object = self.new(params)
         object.save!
         object
-      end
-
-      def find(id)
-        class_store.get(id) || raise(RecordNotFound.new "Cannot find #{name} with id #{id}")
-      end
-
-      def with_id(id)
-        class_store.get(id)
-      end
-
-      def all
-        class_store.all
-      end
-
-      def ids
-        class_store.ids
       end
 
       private
@@ -152,18 +138,6 @@ module MemoryRecord
       end
     end
 
-    def lock!
-      @mutex.lock unless @mutex.owned?
-    end
-
-    def unlock!
-      @mutex.unlock if @mutex.owned?
-    end
-
-    def locked?
-      @mutex.owned?
-    end
-
     define_model_callbacks :destroy
 
     def destroy
@@ -186,17 +160,6 @@ module MemoryRecord
       _delete
     end
 
-    def remove_from_store
-      self.class.class_store.remove(self)
-    end
-
-    def mark_as_deleted
-      self.temp_attribute_list = nil
-      self.synchronize do
-        @destroyed = true
-      end
-    end
-
     def to_s
       "#{self.class}##{self.id}(#{attribute_names.join(', ')})"
     end
@@ -212,6 +175,17 @@ module MemoryRecord
       remove_from_store
     ensure
       unlock!
+    end
+
+    def mark_as_deleted
+      self.temp_attribute_list = nil
+      self.synchronize do
+        @destroyed = true
+      end
+    end
+
+    def remove_from_store
+      self.class.class_store.remove(self)
     end
 
     def _restore_attributes
@@ -239,16 +213,6 @@ module MemoryRecord
         key = self.class.primary_key
       end
       key || :id
-    end
-
-    def synchronize
-      if @mutex.owned?
-        yield
-      else
-        @mutex.synchronize do
-          yield
-        end
-      end
     end
 
     def persists_local_changes
