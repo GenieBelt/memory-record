@@ -177,6 +177,7 @@ end
     def add_filter(filter)
       @filters ||=[]
       @filters << filter
+      self
     end
 
     def method_missing(name, *args)
