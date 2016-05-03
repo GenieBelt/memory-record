@@ -107,6 +107,7 @@ module MemoryRecord
         run_callbacks(new_record? ? :create : :update) do
           run_callbacks(:save) do
             persists_local_changes
+            changes_applied
             add_to_store unless current_transaction
           end
         end
