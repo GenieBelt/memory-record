@@ -2,6 +2,7 @@ require 'memory_record/base/cast'
 require 'memory_record/base/attributes'
 require 'memory_record/transactions/abstract_transaction'
 require 'memory_record/base/transactional'
+require 'memory_record/base/scope'
 require 'active_model'
 require 'memory_record/store'
 module MemoryRecord
@@ -9,16 +10,18 @@ module MemoryRecord
   class RecordNotCommitted <  Exception; end
   class RecordNotFound <  Exception; end
   class Base
+    # noinspection RubyClassVariableUsageInspection
     @@main_store = MainStore.new
-    include MemoryRecord::Attributes # noinspection RubyClassVariableUsageInspection
-    include MemoryRecord::Transactional
-    include MemoryRecord::Cast
     include ActiveModel::AttributeMethods
     extend ActiveModel::Callbacks
     include ActiveModel::Conversion
     include ActiveModel::Dirty
     include ActiveModel::Model
     include ActiveModel::Serialization
+    include MemoryRecord::Attributes
+    include MemoryRecord::Transactional
+    include MemoryRecord::Cast
+    include MemoryRecord::Scope
 
     class << self
       # @return [ObjectStore]
