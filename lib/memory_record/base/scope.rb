@@ -30,6 +30,19 @@ module MemoryRecord
         scope_class.new.where(*args)
       end
 
+      def scope_methods(*names)
+        names.each do |name|
+          scope_method name
+        end
+      end
+
+      def scope(name, lambda)
+        scope_method name
+        scope_class[name] = lambda
+      end
+
+      protected
+
       def scope_method(name)
         self.class_eval <<-METHOD
 def self.#{name}(*args)
@@ -37,14 +50,6 @@ def self.#{name}(*args)
 end
         METHOD
       end
-
-      def scope_methods(*names)
-        names.each do |name|
-          scope_method name
-        end
-      end
-
-      protected
 
       def scope_class
         clazz = instance_variable_get :@scope_class
@@ -83,6 +88,18 @@ end
   end
 
   class SearchScope
+    class << self
+      def [](name)
+        @scopes ||= Hash.new
+        @scopes[name]
+      end
+
+      def []=(name, lambda)
+        @scopes ||= Hash.new
+        @scopes[name] = lambda
+      end
+    end
+
     def ==(other)
       all == other
     end
@@ -154,6 +171,7 @@ end
 
     def limit(new_limit)
       @limit = new_limit
+      self
     end
 
     def add_filter(filter)
@@ -161,8 +179,16 @@ end
       @filters << filter
     end
 
-    def method_missing(*args)
-      all.send(*args)
+    def method_missing(name, *args)
+      if self.class[name]
+        self.class[name].call(*args)
+      else
+        all.send(name, *args)
+      end
+    end
+
+    def respond_to?(method)
+      super || !!self.class[method]
     end
 
     private
