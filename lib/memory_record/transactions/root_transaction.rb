@@ -12,12 +12,12 @@ module MemoryRecord
     end
 
     def commit!
-      @child_transactions.each { |t| t.commit! }
+      @child_transactions.each { |t| t.perform_commit }
       super
     end
 
     def rollback!
-      @child_transactions.each { |t| t.rollback! }
+      @child_transactions.each { |t| t.perform_rollback }
       super
     end
   end

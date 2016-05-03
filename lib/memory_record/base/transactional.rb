@@ -13,11 +13,11 @@ module MemoryRecord
         Thread.current[:MemoryRecordTransaction] = new_transaction options
         begin
           yield
-          current_transaction.commit!
+          current_transaction.perform_commit
         rescue MemoryRecord::Rollback
-          current_transaction.rollback!
+          current_transaction.perform_rollback
         rescue
-          current_transaction.rollback!
+          current_transaction.perform_rollback
           raise
         ensure
           Thread.current[:MemoryRecordTransaction] = old_transaction

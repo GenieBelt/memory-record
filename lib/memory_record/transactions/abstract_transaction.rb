@@ -21,7 +21,7 @@ module MemoryRecord
       @destroy_objects << object
     end
 
-    def rollback!
+    def perform_rollback
       @object_changes.keys.each do |object|
         object.unlock! if object.respond_to? :unlock!
       end
@@ -32,7 +32,7 @@ module MemoryRecord
       @destroy_objects = []
     end
 
-    def commit!
+    def perform_commit
       @object_changes.each do |object, values|
         object.commit(self, values)
       end

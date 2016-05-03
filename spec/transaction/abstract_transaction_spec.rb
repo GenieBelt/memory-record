@@ -18,7 +18,7 @@ describe MemoryRecord::Transaction do
     transaction = MemoryRecord::Transaction.new
     transaction[:foo] = :bar
     expect(transaction[:foo]).to eq :bar
-    transaction.rollback!
+    transaction.perform_rollback
     expect(transaction[:foo]).to be_nil
   end
 end
