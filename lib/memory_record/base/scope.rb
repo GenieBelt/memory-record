@@ -11,6 +11,20 @@ module MemoryRecord
         scope_class.new.where(*args)
       end
 
+      def scope_method(name)
+        self.class_eval <<-METHOD
+def self.#{name}(*args)
+  scope_class.new.#{name}(*args)
+end
+        METHOD
+      end
+
+      def scope_methods(*names)
+        names.each do |name|
+          scope_method name
+        end
+      end
+
       protected
 
       def scope_class
@@ -26,9 +40,13 @@ module MemoryRecord
       def define_clazz
         scope_name = "#{self}::SearchScope"
         unless class_exists? scope_name
-          current_class = self
-          clazz = Class.new(SearchScope)
+          if superclass.respond_to?(:scope_class) && superclass.superclass.respond_to?(:scope_class)
+            clazz = Class.new(superclass.scope_class)
+          else
+            clazz = Class.new(SearchScope)
+          end
           self.const_set 'SearchScope', clazz
+          current_class = self
           clazz.class_eval do
             self.base_class = current_class
           end
@@ -72,6 +90,7 @@ module MemoryRecord
 
 
     def where(params)
+      return self unless params
       params.each do |key, value|
         if value.kind_of? Range
           add_filter ->(object){ object.send(key) >= value.first &&  object.send(key) <= value.last }
@@ -86,12 +105,36 @@ module MemoryRecord
       self
     end
 
+    def not(params)
+      return self unless params
+      params.each do |key, value|
+        if value.kind_of? Range
+          add_filter ->(object){ !(object.send(key) >= value.first &&  object.send(key) <= value.last) }
+        elsif value.kind_of? Array
+          add_filter ->(object){ !(object.send(key).is_a?(Array) ? object.send(key) == value : value.include?(object.send(key))) }
+        elsif value.kind_of? Hash
+          add_filter ->(object){ !object.send(key).where(value).any? }
+        else
+          add_filter ->(object){ !(object.send(key) == value) }
+        end
+      end
+      self
+    end
+
     def all
-      apply_filters
+      apply_limit(apply_filters)
     end
 
     def ids
       all.map(&:id)
+    end
+
+    def find(id)
+      where(id: id).all.first || raise(RecordNotFound.new "Cannot find #{base_class.name} with id #{id}")
+    end
+
+    def limit(new_limit)
+      @limit = new_limit
     end
 
     def add_filter(filter)
@@ -122,6 +165,10 @@ module MemoryRecord
           apply_on_object(object)
         end
       end
+    end
+
+    def apply_limit(scope)
+      @limit ? scope : scope.take(@limit)
     end
 
     def apply_on_object(object)

@@ -54,6 +54,10 @@ module MemoryRecord
         class_store.get(id) || raise(RecordNotFound.new "Cannot find #{name} with id #{id}")
       end
 
+      def with_id(id)
+        class_store.get(id)
+      end
+
       def all
         class_store.all
       end
