@@ -168,7 +168,7 @@ end
     end
 
     def apply_limit(scope)
-      @limit ? scope : scope.take(@limit)
+      @limit ? scope.take(@limit) : scope
     end
 
     def apply_on_object(object)
