@@ -20,5 +20,9 @@ module MemoryRecord
       @child_transactions.each { |t| t.perform_rollback }
       super
     end
+
+    def main_uuid
+      uuid
+    end
   end
 end

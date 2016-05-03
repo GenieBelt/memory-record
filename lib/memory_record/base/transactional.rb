@@ -12,6 +12,7 @@ module MemoryRecord
         old_transaction = current_transaction
         Thread.current[:MemoryRecordTransaction] = new_transaction options
         begin
+          current_transaction.begin_transaction
           yield
           current_transaction.perform_commit
         rescue MemoryRecord::Rollback

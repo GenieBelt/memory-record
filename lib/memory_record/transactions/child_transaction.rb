@@ -23,5 +23,9 @@ module MemoryRecord
       super
       @parent.child_transactions.delete self
     end
+
+    def main_uuid
+      @parent.uuid
+    end
   end
 end
