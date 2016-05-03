@@ -71,13 +71,13 @@ module MemoryRecord
 
     def reload!
       self.temp_attribute_list = nil
-      clear_changes_information
+      _clear_changes_information
       unlock!
       self
     end
 
     def rollback!
-      restore_attributes
+      _restore_attributes
       unlock!
       self
     end
@@ -107,7 +107,7 @@ module MemoryRecord
         run_callbacks(new_record? ? :create : :update) do
           run_callbacks(:save) do
             persists_local_changes
-            changes_applied
+            clean_dirty_attributes
             add_to_store unless current_transaction
           end
         end
@@ -186,6 +186,23 @@ module MemoryRecord
       unlock!
     end
 
+    def _restore_attributes
+      if respond_to? :restore_attributes
+        restore_attributes
+      else
+        @changed_attributes.clear
+        self.temp_attribute_list = nil
+      end
+    end
+
+    def _clear_changes_information
+      if self.respond_to? :clear_changes_information
+        clear_changes_information
+      else
+        @changed_attributes.clear
+      end
+    end
+
     def id_key
       key = nil
       if self.class.respond_to? :id_key
@@ -213,6 +230,15 @@ module MemoryRecord
         commit self, temp_attribute_list
       end
       self.temp_attribute_list = nil
+    end
+
+    def  clean_dirty_attributes
+      if respond_to? :changes_applied
+        changes_applied
+      else
+        @previously_changed = changes
+        @changed_attributes.clear
+      end
     end
 
     def add_to_store
