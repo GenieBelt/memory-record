@@ -27,7 +27,7 @@ module MemoryRecord
 
       # @return [MemoryRecord::SearchScope]
       def where(*args)
-        scope_class.new.where(*args)
+        default_scope.where(*args)
       end
 
       def scope_methods(*names)
@@ -41,12 +41,32 @@ module MemoryRecord
         scope_class[name] = lambda
       end
 
+      def with_scope(scope)
+        old_scope = current_scope
+        self.current_scope = scope
+        yield
+      ensure
+        self.current_scope = old_scope
+      end
+
       protected
+
+      def default_scope
+        current_scope || scope_class.new
+      end
+
+      def current_scope
+        Thread.current["#{name}_current_scope"]
+      end
+
+      def current_scope=(new_scope)
+        Thread.current["#{name}_current_scope"]= new_scope
+      end
 
       def scope_method(name)
         self.class_eval <<-METHOD
 def self.#{name}(*args)
-  scope_class.new.#{name}(*args)
+  default_scope.#{name}(*args)
 end
         METHOD
       end
@@ -100,8 +120,20 @@ end
       end
     end
 
+    def to_a
+      all
+    end
+
     def ==(other)
       all == other
+    end
+
+    def !=(other)
+      all != other
+    end
+
+    def ===(other)
+      all === other
     end
 
     def eql?(other)
@@ -122,10 +154,11 @@ end
 
     def initialize(*args)
       @base_scope = args if args.any?
+      @filters = []
     end
 
 
-    def where(params)
+    def where(params=nil)
       return self unless params
       params.each do |key, value|
         if value.kind_of? Range
@@ -182,7 +215,9 @@ end
 
     def method_missing(name, *args)
       if self.class[name]
-        self.class[name].call(*args)
+        self.class.base_class.with_scope self do
+          self.class[name].call(*args)
+        end
       else
         all.send(name, *args)
       end

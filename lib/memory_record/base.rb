@@ -235,7 +235,7 @@ module MemoryRecord
 
     def add_to_store
       unless id
-        self.attribute_list = self.attribute_list.merge(id: self.class.next_id)
+        self.attribute_list = self.attribute_list.merge(id_key => self.class.next_id)
       end
       self.class.class_store.store self
     end
