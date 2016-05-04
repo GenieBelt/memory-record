@@ -91,14 +91,12 @@ end
 
       def define_clazz
         scope_name = "#{self}::SearchScope"
-        MemoryRecord.logger.debug "Defined #{scope_name} class."
         if class_exists? scope_name
           clazz = Object.const_get(scope_name)
           current_class = self
           clazz.class_eval do
             self.base_class = current_class
           end
-          MemoryRecord.logger.debug "Defined #{scope_name} base class is #{current_class}."
         else
           if superclass.respond_to?(:scope_class) && superclass.superclass.respond_to?(:scope_class)
             clazz = Class.new(superclass.scope_class)
@@ -238,7 +236,6 @@ end
 
     def method_missing(name, *args)
       if self.class[name]
-        MemoryRecord.logger.debug "Calling scope #{name} with #{args}!\nBefore scope #{ids}"
         self.class.base_class.with_scope self do
           self.class[name].call(*args)
         end
