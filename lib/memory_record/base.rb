@@ -32,6 +32,10 @@ module MemoryRecord
         @store ||= @@main_store.get_store_for self
       end
 
+      def main_store
+        @@main_store
+      end
+
       def next_id
         internal_lock.synchronize do
           @next_id ||=0
@@ -50,6 +54,10 @@ module MemoryRecord
         object = self.new(params)
         object.save!
         object
+      end
+
+      def delete_all
+        class_store.clean_store
       end
 
       private

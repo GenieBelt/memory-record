@@ -37,6 +37,6 @@ describe 'Base -> scoping' do
   it 'should create scope' do
     Foo.scope :test_scope, ->(name){ where(bar: name) }
     expect(Foo.respond_to? :test_scope).to be_truthy
-    expect(Foo::SearchScope.new.respond_to? :test_scope)
+    expect(Foo::SearchScope.new(Foo).respond_to? :test_scope)
   end
 end

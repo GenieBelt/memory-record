@@ -8,7 +8,7 @@ module MemoryRecord
   end
   module Transactional
     module ClassMethods
-      def transaction(options)
+      def transaction(options=Hash.new)
         old_transaction = current_transaction
         Thread.current[:MemoryRecordTransaction] = new_transaction options
         begin

@@ -1,3 +1,4 @@
+require 'memory_record/logger'
 module MemoryRecord
   module Scope
     def self.included(base)
@@ -17,12 +18,16 @@ module MemoryRecord
 
       # @return [Array<Object>]
       def all
+        default_scope.all
+      end
+
+      def _all
         class_store.all
       end
 
       # @return [Array<Integer>]
       def ids
-        class_store.ids
+        default_scope.ids
       end
 
       # @return [MemoryRecord::SearchScope]
@@ -44,7 +49,9 @@ module MemoryRecord
       def with_scope(scope)
         old_scope = current_scope
         self.current_scope = scope
-        yield
+        result = yield
+        self.current_scope = old_scope
+        result
       ensure
         self.current_scope = old_scope
       end
@@ -83,7 +90,15 @@ end
 
       def define_clazz
         scope_name = "#{self}::SearchScope"
-        unless class_exists? scope_name
+        MemoryRecord.logger.debug "Defined #{scope_name} class."
+        if class_exists? scope_name
+          clazz = Object.const_get(scope_name)
+          current_class = self
+          clazz.class_eval do
+            self.base_class = current_class
+          end
+          MemoryRecord.logger.debug "Defined #{scope_name} base class is #{current_class}."
+        else
           if superclass.respond_to?(:scope_class) && superclass.superclass.respond_to?(:scope_class)
             clazz = Class.new(superclass.scope_class)
           else
@@ -94,6 +109,7 @@ end
           clazz.class_eval do
             self.base_class = current_class
           end
+          MemoryRecord.logger.debug "Defined #{scope_name} base class is #{current_class}."
         end
         instance_variable_set :@scope_class, Object.const_get(scope_name)
       end
@@ -110,13 +126,24 @@ end
   class SearchScope
     class << self
       def [](name)
-        @scopes ||= Hash.new
+        init_scopes
         @scopes[name]
       end
 
       def []=(name, lambda)
-        @scopes ||= Hash.new
+        init_scopes
         @scopes[name] = lambda
+      end
+
+      def all_scopes
+        init_scopes
+        @scopes
+      end
+
+      private
+
+      def init_scopes
+        @scopes ||= superclass.respond_to?(:all_scopes) ? superclass.all_scopes : Hash.new
       end
     end
 
@@ -142,10 +169,6 @@ end
 
     def equal?(other)
       all.equal? other
-    end
-
-    def <=>(other)
-      all <=> other
     end
 
     def [](index)
@@ -178,13 +201,13 @@ end
       return self unless params
       params.each do |key, value|
         if value.kind_of? Range
-          add_filter ->(object){ !(object.send(key) >= value.first &&  object.send(key) <= value.last) }
+          add_filter ->(object){ object.send(key) < value.first ||  object.send(key) > value.last }
         elsif value.kind_of? Array
-          add_filter ->(object){ !(object.send(key).is_a?(Array) ? object.send(key) == value : value.include?(object.send(key))) }
+          add_filter ->(object){ object.send(key).is_a?(Array) ? object.send(key) != value : !(value.include?(object.send(key))) }
         elsif value.kind_of? Hash
-          add_filter ->(object){ !object.send(key).where(value).any? }
+          add_filter ->(object){ object.send(key).where(value).empty? }
         else
-          add_filter ->(object){ !(object.send(key) == value) }
+          add_filter ->(object){ object.send(key) != value }
         end
       end
       self
@@ -208,7 +231,6 @@ end
     end
 
     def add_filter(filter)
-      @filters ||=[]
       @filters << filter
       self
     end
@@ -218,13 +240,20 @@ end
         self.class.base_class.with_scope self do
           self.class[name].call(*args)
         end
-      else
+      elsif all.respond_to? name
         all.send(name, *args)
+      elsif self.class.base_class.respond_to?(name)
+        self.class.base_class.with_scope self do
+          MemoryRecord.logger.debug "Missing method #{name} one scope!"
+          self.class.base_class.send(name, *args)
+        end
+      else
+        self.class.base_class.send(name, *args)
       end
     end
 
     def respond_to?(method)
-      super || !!self.class[method] || all.respond_to?(method)
+      super || !!self.class[method] || all.respond_to?(method) || self.base_class.respond_to?(method)
     end
 
     private
@@ -233,10 +262,9 @@ end
       if @base_scope
         base_class.send(*@base_scope)
       else
-        base_class.all
+        base_class._all
       end
     end
-
 
     def apply_filters
       if @filters.empty?

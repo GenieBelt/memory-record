@@ -15,6 +15,12 @@ module MemoryRecord
         yield
       end
     end
+
+    def clean_store
+      synchronize do
+        @store = Hash.new
+      end
+    end
   end
 
   class ObjectStore < Store
@@ -23,6 +29,15 @@ module MemoryRecord
       @clazz = clazz
       @foreign_keys = Hash.new
       super()
+    end
+
+    def clean_store
+      super
+      synchronize do
+        @foreign_keys.keys.each do |key|
+          @foreign_keys[key] = Hash.new
+        end
+      end
     end
 
     # Store object
@@ -152,6 +167,10 @@ module MemoryRecord
         @store[object.class] ||= ObjectStore.new(object.class)
         @store[object.class].remove(object)
       end
+    end
+
+    def to_s
+      @store.values.map(&:to_s).join("\n")
     end
   end
 end
