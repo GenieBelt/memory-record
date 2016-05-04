@@ -35,6 +35,14 @@ module MemoryRecord
           METHOD
         end
       end
+
+      def timestamps
+        if defined? DateTime
+          attributes created_at: DateTime, updated_at: DateTime
+        else
+          attributes created_at: Time, updated_at: Time
+        end
+      end
     end
 
     def self.included(base)

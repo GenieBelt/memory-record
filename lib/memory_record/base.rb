@@ -112,6 +112,7 @@ module MemoryRecord
       if self.valid?
         run_callbacks(new_record? ? :create : :update) do
           run_callbacks(:save) do
+            set_timestamps
             persists_local_changes
             _clean_dirty_attributes
             add_to_store unless current_transaction
@@ -222,6 +223,17 @@ module MemoryRecord
         commit self, temp_attribute_list
       end
       self.temp_attribute_list = nil
+    end
+
+    def set_timestamps
+      if new_record?
+        if respond_to? :created_at
+          self.created_at = Time.now
+        end
+      end
+      if respond_to? :updated_at
+        self.updated_at = Time.now
+      end
     end
 
     def _clean_dirty_attributes
