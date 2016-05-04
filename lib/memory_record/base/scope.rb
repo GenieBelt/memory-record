@@ -224,7 +224,7 @@ end
     end
 
     def respond_to?(method)
-      super || !!self.class[method]
+      super || !!self.class[method] || all.respond_to?(method)
     end
 
     private
@@ -275,4 +275,17 @@ end
       end
     end
   end
+
+  module ArrayExtensions
+    def ==(other)
+      if other.is_a? ::MemoryRecord::SearchScope
+        super other.to_a
+      else
+        super
+      end
+    end
+  end
+
+  ::Array.send :prepend, MemoryRecord::ArrayExtensions
 end
+
