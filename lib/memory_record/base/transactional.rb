@@ -37,6 +37,10 @@ module MemoryRecord
         end
       end
 
+      def rollback
+        raise MemoryRecord::Rollback.new
+      end
+
       # @return [MemoryRecord::Transaction]
       def current_transaction
         Thread.current[:MemoryRecordTransaction]
