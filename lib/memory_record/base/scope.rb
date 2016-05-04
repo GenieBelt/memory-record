@@ -52,8 +52,9 @@ module MemoryRecord
         result = yield
         self.current_scope = old_scope
         result
-      ensure
+      rescue
         self.current_scope = old_scope
+        raise
       end
 
       protected
@@ -63,11 +64,11 @@ module MemoryRecord
       end
 
       def current_scope
-        Thread.current["#{name}_current_scope"]
+        Thread.current["#{parent_class}_current_scope"]
       end
 
       def current_scope=(new_scope)
-        Thread.current["#{name}_current_scope"]= new_scope
+        Thread.current["#{parent_class}_current_scope"]= new_scope
       end
 
       def scope_method(name)
@@ -187,7 +188,7 @@ end
         if value.kind_of? Range
           add_filter ->(object){ object.send(key) >= value.first &&  object.send(key) <= value.last }
         elsif value.kind_of? Array
-          add_filter ->(object){ object.send(key).is_a?(Array) ? object.send(key) == value : value.include?(object.send(key)) }
+          add_filter ->(object){ value.include?(object.send(key)) }
         elsif value.kind_of? Hash
           add_filter ->(object){ object.send(key).where(value).any? }
         else
@@ -203,7 +204,7 @@ end
         if value.kind_of? Range
           add_filter ->(object){ object.send(key) < value.first ||  object.send(key) > value.last }
         elsif value.kind_of? Array
-          add_filter ->(object){ object.send(key).is_a?(Array) ? object.send(key) != value : !(value.include?(object.send(key))) }
+          add_filter ->(object){ !(value.include?(object.send(key))) }
         elsif value.kind_of? Hash
           add_filter ->(object){ object.send(key).where(value).empty? }
         else
@@ -237,6 +238,7 @@ end
 
     def method_missing(name, *args)
       if self.class[name]
+        MemoryRecord.logger.debug "Calling scope #{name} with #{args}!\nBefore scope #{ids}"
         self.class.base_class.with_scope self do
           self.class[name].call(*args)
         end

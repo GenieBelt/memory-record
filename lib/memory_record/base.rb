@@ -29,7 +29,11 @@ module MemoryRecord
       # @return [ObjectStore]
       def class_store
         # noinspection RubyClassVariableUsageInspection
-        @store ||= @@main_store.get_store_for self
+        unless @store
+          clazz  = parent_class
+          @store = @@main_store.get_store_for clazz
+        end
+        @store
       end
 
       def main_store
@@ -61,6 +65,17 @@ module MemoryRecord
       end
 
       private
+
+      def parent_class
+        unless @parent_class
+          clazz = self
+          while clazz.superclass < MemoryRecord::Base
+            clazz = clazz.superclass
+          end
+          @parent_class = clazz
+        end
+        @parent_class
+      end
 
       def internal_lock
         @lock ||= Mutex.new
@@ -170,11 +185,11 @@ module MemoryRecord
     end
 
     def to_s
-      "#{self.class}##{self.id}(#{attribute_names.join(', ')})"
+      "#{self.class}[#{self.id}](#{attribute_names.join(', ')})"
     end
 
     def inspect
-      "#{self.class}##{self.id}(#{_attribute_list})"
+      "#{self.class}[#{self.id}](#{_attribute_list})"
     end
 
     private
