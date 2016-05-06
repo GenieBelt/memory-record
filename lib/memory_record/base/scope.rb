@@ -16,6 +16,9 @@ module MemoryRecord
         class_store.get(id)
       end
 
+      def first
+        all.first
+      end
 
       # @return [Array<Object>]
       def all

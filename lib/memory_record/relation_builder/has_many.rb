@@ -37,7 +37,7 @@ module MemoryRecord
          if @options[:as]
            @foreign_key = @options[:as] + '_id'
          else
-           @foreign_key = @options.fetch(:foreign_key, @relation_class.model_name.singular + '_id')
+           @foreign_key = @options.fetch(:foreign_key, clazz.model_name.singular + '_id')
          end
        end
 
