@@ -4,6 +4,7 @@ require 'memory_record/transactions/abstract_transaction'
 require 'memory_record/base/transactional'
 require 'memory_record/base/scope'
 require 'memory_record/base/locking'
+require 'memory_record/base/relations'
 require 'active_model'
 require 'memory_record/store'
 module MemoryRecord
@@ -24,6 +25,7 @@ module MemoryRecord
     include MemoryRecord::Cast
     include MemoryRecord::Scope
     include MemoryRecord::Locking
+    include MemoryRecord::Relations
 
     class << self
       # @return [ObjectStore]
