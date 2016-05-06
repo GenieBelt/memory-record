@@ -22,8 +22,16 @@ module MemoryRecord
         default_scope.all
       end
 
+      def with_fk(key_name,id)
+        scope_class.new(:_with_fk, key_name, id)
+      end
+
       def _all
         class_store.all
+      end
+
+      def _with_fk(key_name,id)
+        class_store.get_with_fk(key_name, id)
       end
 
       # @return [Array<Integer>]

@@ -1,7 +1,7 @@
 require 'active_support/core_ext'
 module MemoryRecord
   module RelationBuilder
-     class HasMany
+     class HasManyAndBelongsTo
        def self.build(clazz, name, options=Hash.new)
           new(clazz, name, options).build
        end
@@ -33,12 +33,8 @@ module MemoryRecord
          @relation_class = class_name.camel_case.constantize
        end
 
-       def get_foreign_key
-         if @options[:as]
-           @foreign_key = @options[:as] + '_id'
-         else
-           @foreign_key = @options.fetch(:foreign_key, @relation_class.foreign_key)
-         end
+       def get_foreign_keys
+         @clazz_fk = clazz.to_s.underscore + '_id'
        end
 
        def make_foreign_key
