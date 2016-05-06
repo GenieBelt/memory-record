@@ -29,15 +29,15 @@ module MemoryRecord
        private
 
        def get_class_name
-         class_name = @options.fetch(:class_name, @name)
-         @relation_class = class_name.camel_case.constantize
+         class_name = @options.fetch(:class_name, @name.to_s.singularize)
+         @relation_class = class_name.to_s.camelize.constantize
        end
 
        def get_foreign_key
          if @options[:as]
            @foreign_key = @options[:as] + '_id'
          else
-           @foreign_key = @options.fetch(:foreign_key, @relation_class.foreign_key)
+           @foreign_key = @options.fetch(:foreign_key, @relation_class.model_name.singular + '_id')
          end
        end
 
@@ -75,6 +75,10 @@ end
 
        def clazz
          @clazz
+       end
+
+       def name
+         @name
        end
      end
   end
