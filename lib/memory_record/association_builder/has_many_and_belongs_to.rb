@@ -29,33 +29,47 @@ module MemoryRecord
        private
 
        def get_class_name
-         class_name = @options.fetch(:class_name, @name)
+         class_name = @options.fetch(:class_name, @name.to_s.singularize)
          @relation_class = class_name.camel_case.constantize
        end
 
+       def get_joint_class_name
+         @join_class_name = [@clazz.to_s.split('::').last, @relation_class.to_s.split('::').last].sort.join('')
+       end
+
+       def get_joint_class
+         begin
+           @join_class = Object.const_get @join_class_name
+         rescue
+           @join_class = build_join_class
+         end
+       end
+
+       def build_join_class
+         clazz = Class.new(MemoryRecord::Base)
+         Object.const_set @join_class_name, clazz
+         clazz.class_eval <<-ATTRIBUTES
+  attributes :id, :#{@l_clazz_fk}, :#{@r_clazz_fk}
+         ATTRIBUTES
+         clazz.class_store.foreign_key(@l_clazz_fk.to_sym)
+         clazz.class_store.foreign_key(@r_clazz_fk.to_sym)
+         clazz
+       end
+
        def get_foreign_keys
-         @clazz_fk = clazz.to_s.underscore + '_id'
+         @l_clazz_fk = @clazz.to_s.underscore + '_id'
+         @r_clazz_fk = @relation_class.to_s.underscore + '_id'
        end
 
-       def make_foreign_key
-         @relation_class.class_store.foreign_key(@foreign_key.to_sym)
-       end
-
-       def get_type_field
-         @type_field = @options[:as] + '_type'
-       end
 
        def build_getter
          clazz.class_eval <<-METHOD
 def #{name}
-  #{@relation_class}.with_fk(:#{@foreign_key}, self.id)
+  #{@join_class}.with_fk(:#{@foreign_key}, self.id)
 end
 METHOD
        end
 
-       def build_setter
-
-       end
 
        def build_polymorphic_getter
          clazz.class_eval <<-METHOD
@@ -65,9 +79,6 @@ end
          METHOD
        end
 
-       def build_polymorphic_setter
-
-       end
 
        def clazz
          @clazz

@@ -4,7 +4,7 @@ require 'memory_record/transactions/abstract_transaction'
 require 'memory_record/base/transactional'
 require 'memory_record/base/scope'
 require 'memory_record/base/locking'
-require 'memory_record/base/relations'
+require 'memory_record/base/associations'
 require 'active_model'
 require 'memory_record/store'
 module MemoryRecord
@@ -25,7 +25,7 @@ module MemoryRecord
     include MemoryRecord::Cast
     include MemoryRecord::Scope
     include MemoryRecord::Locking
-    include MemoryRecord::Relations
+    include MemoryRecord::Associations
 
     class << self
       # @return [ObjectStore]
@@ -147,6 +147,16 @@ module MemoryRecord
       else
         unlock!
         false
+      end
+    end
+
+    def update_column(column, value)
+      if self.current_transaction
+        self.current_transaction[self] ||= self.attribute_list
+        self.current_transaction[self][column.to_sym] = value
+        self.write_attribute column, value
+      else
+        self.attribute_list[column.to_sym] = value
       end
     end
 

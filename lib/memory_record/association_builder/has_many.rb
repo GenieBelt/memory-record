@@ -1,6 +1,6 @@
 require 'active_support/core_ext'
 module MemoryRecord
-  module RelationBuilder
+  module AssociationBuilder
      class HasMany
        def self.build(clazz, name, options=Hash.new)
           new(clazz, name, options).build
