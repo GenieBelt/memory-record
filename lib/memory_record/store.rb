@@ -173,4 +173,10 @@ module MemoryRecord
       @store.values.map(&:to_s).join("\n")
     end
   end
+
+  class CrossJoinStore < Store
+    def self.derive_join_store_name(first_store, second_store) # :nodoc:
+      [first_store.to_s, second_store.to_s].sort.join("\0").gsub(/^(.*_)(.+)\0\1(.+)/, '\1\2_\3').tr("\0", "_")
+    end
+  end
 end
