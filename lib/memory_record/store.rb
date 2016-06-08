@@ -67,6 +67,13 @@ module MemoryRecord
       end
     end
 
+    #@return [Hash]
+    def get_fk_index(key_name)
+      synchronize do
+        @foreign_keys[key_name] || Hash.new
+      end
+    end
+
     # Add index for foreign key
     # @return [NilClass]
     def foreign_key(name)

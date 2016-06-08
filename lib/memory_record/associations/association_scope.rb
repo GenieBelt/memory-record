@@ -29,7 +29,7 @@ module MemoryRecord
       end
 
       def join_type
-        Arel::Nodes::InnerJoin
+        :inner_join
       end
 
       def self.get_bind_values(owner, chain)
