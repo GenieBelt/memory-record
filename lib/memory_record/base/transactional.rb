@@ -1,11 +1,6 @@
 require 'memory_record/transactions/child_transaction'
 require 'memory_record/transactions/root_transaction'
 module MemoryRecord
-  class Rollback < Exception;
-    def initialize
-      super 'Rollback'
-    end
-  end
   module Transactional
     module ClassMethods
       def transaction(options=Hash.new)

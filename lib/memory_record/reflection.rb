@@ -272,8 +272,7 @@ module MemoryRecord
         @options       = options
         @memory_record = memory_record
         @klass         = options[:anonymous_class]
-        @plural_name   = memory_record.pluralize_table_names ?
-                            name.to_s.pluralize : name.to_s
+        @plural_name   = name.to_s.pluralize
       end
 
       def autosave=(autosave)

@@ -5,12 +5,13 @@ require 'memory_record/base/transactional'
 require 'memory_record/base/scope'
 require 'memory_record/base/locking'
 require 'memory_record/base/relations'
+require 'memory_record/core'
 require 'active_model'
 require 'memory_record/store'
+require 'memory_record/errors'
+require 'memory_record/associations'
+require 'memory_record/reflection'
 module MemoryRecord
-  class RecordNotSaved < Exception; end
-  class RecordNotCommitted <  Exception; end
-  class RecordNotFound <  Exception; end
   class Base
     # noinspection RubyClassVariableUsageInspection
     @@main_store = MainStore.new
@@ -20,12 +21,16 @@ module MemoryRecord
     include ActiveModel::Dirty
     include ActiveModel::Model
     include ActiveModel::Serialization
+    include MemoryRecord::Core
     include MemoryRecord::Attributes
     include MemoryRecord::Transactional
     include MemoryRecord::Cast
     include MemoryRecord::Scope
     include MemoryRecord::Locking
-    include MemoryRecord::Relations
+    include MemoryRecord::Associations
+    include MemoryRecord::Reflection
+
+    mattr_accessor :belongs_to_required_by_default, instance_accessor: false
 
     class << self
       # @return [ObjectStore]
@@ -82,12 +87,6 @@ module MemoryRecord
       def internal_lock
         @lock ||= Mutex.new
       end
-    end
-
-    def initialize(params=Hash.new)
-      @attribute_list = Hash.new
-      @mutex = Mutex.new
-      assign_attributes params
     end
 
     def id
@@ -277,4 +276,5 @@ module MemoryRecord
       self.class.class_store.store self
     end
   end
+  ActiveSupport.run_load_hooks(:memory_record, Base)
 end

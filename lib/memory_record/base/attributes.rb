@@ -11,6 +11,10 @@ module MemoryRecord
         @attributes || Array.new
       end
 
+      def dangerous_attribute_method?(name)
+        @attributes.include?(name.to_sym)
+      end
+
       private
 
       # Define attributes methods
@@ -64,6 +68,10 @@ module MemoryRecord
     # @return [Array<String>]
     def attribute_names
       self.class.attribute_names.map(&:to_s)
+    end
+
+    def type_for_attribute(attribute)
+      @attributes_types[attribute.to_sym]
     end
 
     protected
