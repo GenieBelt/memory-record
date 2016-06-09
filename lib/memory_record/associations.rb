@@ -217,12 +217,12 @@ module MemoryRecord
       autoload :HasAndBelongsToMany, 'memory_record/associations/builder/has_and_belongs_to_many'
     end
 
-    # eager_autoload do
+    eager_autoload do
     #   autoload :Preloader
     #   autoload :JoinDependency
-    #   autoload :AssociationScope
-    #   autoload :AliasTracker
-    # end
+       autoload :AssociationScope
+       autoload :AliasTracker
+    end
 
     # Returns the association instance for the given name, instantiating it if it doesn't already exist
     def association(name) #:nodoc:

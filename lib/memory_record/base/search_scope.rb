@@ -1,6 +1,9 @@
 require 'memory_record/logger'
 module MemoryRecord
   class SearchScope
+    attr_accessor :extending_values
+    private :extending_values, :extending_values=
+
     class << self
       def [](name)
         init_scopes
@@ -55,6 +58,7 @@ module MemoryRecord
     def initialize(*args)
       @base_scope = args if args.any?
       @filters = []
+      @extending_values = []
     end
 
 
@@ -94,6 +98,10 @@ module MemoryRecord
       apply_limit(apply_filters)
     end
 
+    def records
+      all
+    end
+
     def ids
       all.map(&:id)
     end
@@ -110,6 +118,19 @@ module MemoryRecord
     def add_filter(filter)
       @filters << filter
       self
+    end
+
+    def _filters
+      @filters
+    end
+
+    def _add_filters(filters)
+      @filters += filters
+      self
+    end
+
+    def merge(scope)
+      self.class.new(self)._add_filters(scope._filters)
     end
 
     def method_missing(name, *args)
@@ -133,10 +154,22 @@ module MemoryRecord
       super || !!self.class[method] || all.respond_to?(method) || self.base_class.respond_to?(method)
     end
 
+    def extending!(*modules, &block) # :nodoc:
+      modules << Module.new(&block) if block
+      modules.flatten!
+
+      self.extending_values += modules
+      extend(*extending_values) if extending_values.any?
+
+      self
+    end
+
     private
 
     def base_scope
-      if @base_scope
+      if @base_scope && @base_scope.first && @base_scope.first.kind_of?(self.class)
+        @base_scope.first.all
+      elsif @base_scope
         base_class.send(*@base_scope)
       else
         base_class._all

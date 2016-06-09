@@ -94,7 +94,7 @@ module MemoryRecord
       # actually gets built.
       def association_scope
         if klass
-          @association_scope ||= AssociationScope.scope(self, klass.connection)
+          @association_scope ||= AssociationScope.scope(self)
         end
       end
 
@@ -121,7 +121,7 @@ module MemoryRecord
       # Can be overridden (i.e. in ThroughAssociation) to merge in other scopes (i.e. the
       # through association's scope)
       def target_scope
-        AssociationRelation.create(klass, klass.arel_table, klass.predicate_builder, self).merge!(klass.all)
+        klass.get_scope
       end
 
       # Loads the \target if needed and returns it.

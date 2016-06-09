@@ -1017,39 +1017,35 @@ module MemoryRecord
       end
     end
 
-    # class RuntimeReflection < PolymorphicReflection # :nodoc:
-    #   attr_accessor :next
-    #
-    #   def initialize(reflection, association)
-    #     @reflection = reflection
-    #     @association = association
-    #   end
-    #
-    #   def klass
-    #     @association.klass
-    #   end
-    #
-    #   def table_name
-    #     klass.store_name
-    #   end
-    #
-    #   def constraints
-    #     @reflection.constraints
-    #   end
-    #
-    #   def source_type_info
-    #     @reflection.source_type_info
-    #   end
-    #
-    #   def alias_candidate(name)
-    #     "#{plural_name}_#{name}_join"
-    #   end
-    #
-    #   def alias_name
-    #     Arel::Table.new(table_name)
-    #   end
-    #
-    #   def all_includes; yield; end
-    # end
+    class RuntimeReflection < PolymorphicReflection # :nodoc:
+      attr_accessor :next
+
+      def initialize(reflection, association)
+        @reflection = reflection
+        @association = association
+      end
+
+      def klass
+        @association.klass
+      end
+
+      def table_name
+        klass.store_name
+      end
+
+      def constraints
+        @reflection.constraints
+      end
+
+      def source_type_info
+        @reflection.source_type_info
+      end
+
+      def alias_candidate(name)
+        "#{plural_name}_#{name}_join"
+      end
+
+      def all_includes; yield; end
+    end
   end
 end

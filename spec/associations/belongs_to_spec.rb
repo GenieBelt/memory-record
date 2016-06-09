@@ -58,9 +58,14 @@ describe 'belongs_to association' do
       belongs_to :bar
     end
     bar = Bar.create! name: 'test'
+    bar2 = Bar.create! name: 'test 2'
+    Bar.create! name: 'test 3'
     foo = Foo.create! bar_id: bar.id
     expect(foo.bar_id).to eq bar.id
     expect(foo.bar).to eq bar
+
+    foo.bar_id = bar2.id
+    expect(foo.bar).to eq bar2
   end
 
 end

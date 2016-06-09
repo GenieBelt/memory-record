@@ -8,6 +8,11 @@ module MemoryRecord
 
     module ClassMethods
 
+      def inherited(child_class)
+        child_class.scope_class
+        super
+      end
+
       def find(id)
         class_store.get(id) || raise(RecordNotFound.new "Cannot find #{name} with id #{id}")
       end
@@ -69,6 +74,22 @@ module MemoryRecord
         raise
       end
 
+      def unscoped
+        scope_class.new
+      end
+
+      def get_scope
+        default_scope
+      end
+
+      def scope_class
+        clazz = instance_variable_get :@scope_class
+        unless clazz
+          define_clazz
+        end
+        clazz || instance_variable_get(:@scope_class)
+      end
+
       protected
 
       def default_scope
@@ -91,13 +112,6 @@ end
         METHOD
       end
 
-      def scope_class
-        clazz = instance_variable_get :@scope_class
-        unless clazz
-          define_clazz
-        end
-        clazz || instance_variable_get(:@scope_class)
-      end
 
       private
 

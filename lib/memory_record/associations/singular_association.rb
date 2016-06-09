@@ -3,6 +3,10 @@ module MemoryRecord
     class SingularAssociation < Association #:nodoc:
       # Implements the reader method, e.g. foo.bar for Foo.has_one :bar
       def reader(force_reload = false)
+        if !loaded? || stale_target?
+          reload
+        end
+
         target
       end
 
