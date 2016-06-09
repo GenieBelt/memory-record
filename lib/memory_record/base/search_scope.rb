@@ -130,6 +130,7 @@ module MemoryRecord
     end
 
     def merge(scope)
+      self unless scope
       self.class.new(self)._add_filters(scope._filters)
     end
 

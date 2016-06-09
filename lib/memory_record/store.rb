@@ -84,6 +84,12 @@ module MemoryRecord
       nil
     end
 
+    def foreign_key?(name)
+      synchronize do
+        !!@foreign_keys[name.to_sym]
+      end
+    end
+
     # @return [Object, NilClass]
     def remove_object(object)
       synchronize do

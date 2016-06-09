@@ -61,7 +61,12 @@ module MemoryRecord
         foreign_key = join_keys.foreign_key
 
         value = transform_value(owner[foreign_key])
-        scope = scope.where( key => value )
+        if scope.class_store.foreign_key?(key)
+          scope.with_fk(key, value)
+        else
+          scope = scope.where( key => value )
+        end
+
 
         if reflection.type
           polymorphic_type = transform_value(owner.class.base_class.name)
