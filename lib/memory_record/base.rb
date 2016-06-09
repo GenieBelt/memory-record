@@ -7,6 +7,7 @@ require 'memory_record/base/locking'
 require 'memory_record/base/relations'
 require 'memory_record/core'
 require 'active_model'
+require 'memory_record/inheritance'
 require 'memory_record/store'
 require 'memory_record/errors'
 require 'memory_record/associations'
@@ -23,6 +24,7 @@ module MemoryRecord
     include ActiveModel::Serialization
     include MemoryRecord::Core
     include MemoryRecord::Attributes
+    include MemoryRecord::Inheritance
     include MemoryRecord::Transactional
     include MemoryRecord::Cast
     include MemoryRecord::Scope
@@ -69,6 +71,14 @@ module MemoryRecord
 
       def delete_all
         class_store.clean_store
+      end
+
+      def primary_key
+        @primary_key || :id
+      end
+
+      def primary_key=(new_pk)
+        @primary_key = new_pk
       end
 
       private

@@ -15,6 +15,10 @@ module MemoryRecord
         @attributes.include?(name.to_sym)
       end
 
+      def has_attribute?(name)
+        @attributes.include?(name.to_sym)
+      end
+
       private
 
       # Define attributes methods
@@ -72,6 +76,18 @@ module MemoryRecord
 
     def type_for_attribute(attribute)
       @attributes_types[attribute.to_sym]
+    end
+
+    def _read_attribute(attribute)
+      read_attribute(attribute.to_sym)
+    end
+
+    def [](name)
+      read_attribute(name.to_sym)
+    end
+
+    def []=(name, value)
+      write_attribute name, value
     end
 
     protected
