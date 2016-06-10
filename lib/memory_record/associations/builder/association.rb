@@ -30,6 +30,7 @@ module MemoryRecord::Associations::Builder # :nodoc:
       define_accessors model, reflection
       define_callbacks model, reflection
       define_validations model, reflection
+      define_foreign_key_index model, reflection
       reflection
     end
 
@@ -90,6 +91,9 @@ module MemoryRecord::Associations::Builder # :nodoc:
       Association.extensions.each do |extension|
         extension.build model, reflection
       end
+    end
+
+    def self.define_foreign_key_index(model, reflection)
     end
 
     # Defines the setter and getter methods for the association

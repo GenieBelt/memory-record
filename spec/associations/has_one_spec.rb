@@ -125,6 +125,9 @@ describe 'has_one association' do
         expect(beer2.pub).to be_nil
 
         pub.item_id = beer2.id
+        pub.save!
+        expect(Pub.class_store.get_with_fk(:item_id, beer2.id)).to eq [pub]
+        expect(Pub.class_store.get_with_fk(:item_id, beer.id)).to eq []
         expect(beer.reload.pub).to be_nil
         expect(beer2.reload.pub).to eq pub
       end

@@ -28,6 +28,7 @@ module MemoryRecord
     def initialize(clazz)
       @clazz = clazz
       @foreign_keys = Hash.new
+      @index_list = Hash.new
       super()
     end
 
@@ -46,9 +47,14 @@ module MemoryRecord
       id = object.send id_key
       raise NoIdError.new(object) unless id
       synchronize do
-        @store[id] = object
-        @foreign_keys.keys.each do |key|
-          add_fk_index(key, object)
+        if @store[id]
+          @store[id] = object
+          _update_fk_for object
+        else
+          @store[id] = object
+          @foreign_keys.keys.each do |key|
+            add_fk_index(key, object)
+          end
         end
       end
     end
@@ -93,6 +99,8 @@ module MemoryRecord
     # @return [Object, NilClass]
     def remove_object(object)
       synchronize do
+        id = object.send id_key
+        @index_list.delete id
         @foreign_keys.keys.each do |key|
           fk_id = object.send key
           if fk_id
@@ -124,6 +132,12 @@ module MemoryRecord
       end
     end
 
+    def update_fk_for(object)
+      synchronize do
+        _update_fk_for object
+      end
+    end
+
     private
 
     def reindex(foreign_key)
@@ -136,9 +150,28 @@ module MemoryRecord
 
     def add_fk_index(key, object)
       fk_id = object.send key
+      id = object.send id_key
       if fk_id
         @foreign_keys[key][fk_id] ||= Array.new
         @foreign_keys[key][fk_id] << object
+        @index_list[id] ||= Hash.new
+        @index_list[id][key]=fk_id
+      end
+    end
+
+    def _update_fk_for(object)
+      id = object.send id_key
+      if @index_list[id] && @index_list[id].any?
+        @index_list[id].each do |fk, old_value|
+          current_value = object.send fk
+          unless current_value == old_value
+            MemoryRecord.logger.debug "Updating fk #{fk} from #{old_value} to #{current_value}"
+            @foreign_keys[fk][old_value] ||= Array.new
+            @foreign_keys[fk][old_value].delete object
+            @foreign_keys[fk][current_value] ||=Array.new
+            @foreign_keys[fk][current_value] << object unless @foreign_keys[fk][current_value].include?(object)
+          end
+        end
       end
     end
 

@@ -10,6 +10,10 @@ module MemoryRecord::Associations::Builder # :nodoc:
       valid
     end
 
+    def self.define_foreign_key_index(model, reflection)
+      puts 'x'
+    end
+
     def self.valid_dependent_options
       [:destroy, :delete, :nullify, :restrict_with_error, :restrict_with_exception]
     end

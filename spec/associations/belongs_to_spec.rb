@@ -37,35 +37,34 @@ describe 'belongs_to association' do
 
   context 'normal' do
     before(:all) do
-      undefine_class :Foo, :Bar
-      class Bar < MemoryRecord::Base
+      undefine_class :Handle, :Mug
+      class Mug < MemoryRecord::Base
         attributes id: Integer, name: String
       end
-      class Foo < MemoryRecord::Base;
-        attributes id: Integer, bar_id: Integer
-        belongs_to :bar
+      class Handle < MemoryRecord::Base;
+        attributes id: Integer, mug_id: Integer
+        belongs_to :mug
       end
     end
 
     it 'should set proper values' do
-      bar = Bar.create! name: 'test'
-      foo = Foo.create! bar: bar
-      expect(foo.bar_id).to eq bar.id
-      puts "[3] #{Bar.hash}"
+      mug = Mug.create! name: 'test'
+      handle = Handle.create! mug: mug
+      expect(handle.mug_id).to eq mug.id
     end
 
     it 'should load proper values' do
-      bar = Bar.create! name: 'test'
-      bar2 = Bar.create! name: 'test 2'
-      Bar.create! name: 'test 3'
-      foo = Foo.create! bar_id: bar.id
-      if bar != foo.bar
-        puts " #{bar.class.hash} vs #{foo.bar.class.hash} --#{Bar.hash}"
+      mug = Mug.create! name: 'test'
+      mug2 = Mug.create! name: 'test 2'
+      Mug.create! name: 'test 3'
+      handle = Handle.create! mug_id: mug.id
+      if mug != handle.mug
+        puts " #{mug.class.hash} vs #{handle.mug.class.hash} --#{Mug.hash}"
       end
-      expect(foo.bar).to eq bar
+      expect(handle.mug).to eq mug
 
-      foo.bar_id = bar2.id
-      expect(foo.bar).to eq bar2
+      handle.mug_id = mug2.id
+      expect(handle.mug).to eq mug2
     end
   end
 

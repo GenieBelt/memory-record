@@ -23,6 +23,10 @@ module MemoryRecord::Associations::Builder # :nodoc:
       add_counter_cache_methods mixin
     end
 
+    def self.define_foreign_key_index(model, reflection)
+      model.class_store.foreign_key(reflection.join_keys(model).foreign_key)
+    end
+
     def self.add_counter_cache_methods(mixin)
       return if mixin.method_defined? :belongs_to_counter_cache_after_update
 

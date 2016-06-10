@@ -63,9 +63,9 @@ module MemoryRecord
         value = transform_value(owner[foreign_key])
         if scope.class_store.foreign_key?(key)
           scope.with_fk(key, value)
-        else
-          scope = scope.where( key => value )
         end
+
+        scope = scope.where( key => value )
 
 
         if reflection.type
