@@ -17,6 +17,14 @@ module MemoryRecord
           mod
         end
       end
+
+      def primary_key
+        @primary_key || :id
+      end
+
+      def primary_key=(new_pk)
+        @primary_key = new_pk
+      end
     end
 
     def initialize(params=nil)
@@ -24,6 +32,7 @@ module MemoryRecord
       @mutex = Mutex.new
       init_internals
       initialize_internals_callback
+      self.temp_attribute_list = Hash.new
 
       assign_attributes params if params
 
@@ -74,6 +83,18 @@ module MemoryRecord
 
     def self.included(base)
       base.extend ClassMethods
+    end
+
+    protected
+
+    def id_key
+      key = nil
+      if self.class.respond_to? :id_key
+        key = self.class.id_key
+      elsif self.class.respond_to? :primary_key
+        key = self.class.primary_key
+      end
+      key || :id
     end
   end
 end

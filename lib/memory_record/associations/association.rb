@@ -257,10 +257,7 @@ module MemoryRecord
 
         # Returns true if statement cache should be skipped on the association reader.
         def skip_statement_cache?
-          reflection.has_scope? ||
-            scope.eager_loading? ||
-            klass.scope_attributes? ||
-            reflection.source_reflection.memory_record.default_scopes.any?
+          true
         end
     end
   end

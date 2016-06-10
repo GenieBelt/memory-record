@@ -90,6 +90,39 @@ module MemoryRecord
       write_attribute name, value
     end
 
+    # Returns +true+ if the specified +attribute+ has been set by the user or by a
+    # database load and is neither +nil+ nor <tt>empty?</tt> (the latter only applies
+    # to objects that respond to <tt>empty?</tt>, most notably Strings). Otherwise, +false+.
+    # Note that it always returns +true+ with boolean attributes.
+    #
+    #   class Task < MemoryRecord::Base
+    #   end
+    #
+    #   task = Task.new(title: '', is_done: false)
+    #   task.attribute_present?(:title)   # => false
+    #   task.attribute_present?(:is_done) # => true
+    #   task.title = 'Buy milk'
+    #   task.is_done = true
+    #   task.attribute_present?(:title)   # => true
+    #   task.attribute_present?(:is_done) # => true
+    def attribute_present?(attribute)
+      value = _read_attribute(attribute)
+      !value.nil? && !(value.respond_to?(:empty?) && value.empty?)
+    end
+
+    # Returns true if the given attribute exists, otherwise false.
+    #
+    #   class Person < MemoryRecord::Base
+    #     attributes :name, :age
+    #   end
+    #
+    #   Person.has_attribute?('name')   # => true
+    #   Person.has_attribute?(:age)     # => true
+    #   Person.has_attribute?(:nothing) # => false
+    def has_attribute?(attr_name)
+      attribute_names.include?(attr_name.to_sym)
+    end
+
     protected
 
     def temp_attribute_list=(value)

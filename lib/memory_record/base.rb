@@ -5,6 +5,7 @@ require 'memory_record/base/transactional'
 require 'memory_record/base/scope'
 require 'memory_record/base/locking'
 require 'memory_record/base/relations'
+require 'memory_record/base/persisted'
 require 'memory_record/core'
 require 'active_model'
 require 'memory_record/inheritance'
@@ -22,13 +23,14 @@ module MemoryRecord
     include ActiveModel::Dirty
     include ActiveModel::Model
     include ActiveModel::Serialization
+    include MemoryRecord::Locking
     include MemoryRecord::Core
+    include MemoryRecord::Persisted
     include MemoryRecord::Attributes
     include MemoryRecord::Inheritance
     include MemoryRecord::Transactional
     include MemoryRecord::Cast
     include MemoryRecord::Scope
-    include MemoryRecord::Locking
     include MemoryRecord::Associations
     include MemoryRecord::Reflection
 
@@ -57,13 +59,13 @@ module MemoryRecord
         end
       end
 
-      def create(params)
+      def create(params=nil)
         object = self.new(params)
         object.save
         object
       end
 
-      def create!(params)
+      def create!(params=nil)
         object = self.new(params)
         object.save!
         object
@@ -71,14 +73,6 @@ module MemoryRecord
 
       def delete_all
         class_store.clean_store
-      end
-
-      def primary_key
-        @primary_key || :id
-      end
-
-      def primary_key=(new_pk)
-        @primary_key = new_pk
       end
 
       private
@@ -109,92 +103,6 @@ module MemoryRecord
     end
 
 
-    def reload!
-      self.temp_attribute_list = nil
-      _clear_changes_information
-      unlock!
-      self
-    end
-
-    def rollback!
-      _restore_attributes
-      unlock!
-      self
-    end
-
-    def persisted?
-      !!((!self.temp_attribute_list) && self.id)
-    end
-
-    define_model_callbacks :commit
-
-    def commit(transaction, values)
-      raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction) || transaction ==self
-      run_callbacks(:commit) do
-        self.attribute_list = values
-        self.temp_attribute_list = nil
-        add_to_store
-      end
-    ensure
-      unlock!
-    end
-
-    define_model_callbacks :save
-    define_model_callbacks :update
-    define_model_callbacks :create
-    def save
-      if self.valid?
-        run_callbacks(new_record? ? :create : :update) do
-          run_callbacks(:save) do
-            set_timestamps
-            persists_local_changes
-            _clean_dirty_attributes
-            add_to_store unless current_transaction
-          end
-        end
-        self
-      else
-        unlock!
-        false
-      end
-    end
-
-    def save!
-      save || raise(MemoryRecord::RecordNotSaved.new "Record not saved! - #{self}")
-    end
-
-    def new_record?
-      !(id && self.class.class_store.get(id))
-    end
-
-    def destroyed?
-      synchronize do
-        !!@destroyed
-      end
-    end
-
-    define_model_callbacks :destroy
-
-    def destroy
-      run_callbacks(:destroy) do
-        delete
-      end
-    end
-
-    def delete
-      self.temp_attribute_list = nil
-      if current_transaction
-        current_transaction.destroy self
-      else
-        _delete
-      end
-    end
-
-    def commit_destroy(transaction)
-      raise RecordNotCommitted.new "Cannot commit #{self}" unless transaction.kind_of?(Transaction)
-      _delete
-    end
-
     def to_s
       "#{self.class}[#{self.id}](#{attribute_names.join(', ')})"
     end
@@ -203,25 +111,13 @@ module MemoryRecord
       "#{self.class}[#{self.id}](#{_attribute_list})"
     end
 
-    private
-
-    def _delete
-      mark_as_deleted
-      remove_from_store
-    ensure
+    def rollback!
+      _restore_attributes
       unlock!
+      self
     end
 
-    def mark_as_deleted
-      self.temp_attribute_list = nil
-      self.synchronize do
-        @destroyed = true
-      end
-    end
-
-    def remove_from_store
-      self.class.class_store.remove(self)
-    end
+    private
 
     def _restore_attributes
       if respond_to? :restore_attributes
@@ -230,33 +126,6 @@ module MemoryRecord
         @changed_attributes.clear
         self.temp_attribute_list = nil
       end
-    end
-
-    def _clear_changes_information
-      if self.respond_to? :clear_changes_information
-        clear_changes_information
-      else
-        @changed_attributes.clear
-      end
-    end
-
-    def id_key
-      key = nil
-      if self.class.respond_to? :id_key
-        key = self.class.id_key
-      elsif self.class.respond_to? :primary_key
-        key = self.class.primary_key
-      end
-      key || :id
-    end
-
-    def persists_local_changes
-      if self.current_transaction
-        self.current_transaction[self] = temp_attribute_list
-      else
-        commit self, temp_attribute_list
-      end
-      self.temp_attribute_list = nil
     end
 
     def set_timestamps
@@ -268,22 +137,6 @@ module MemoryRecord
       if respond_to? :updated_at
         self.updated_at = Time.now
       end
-    end
-
-    def _clean_dirty_attributes
-      if respond_to? :changes_applied
-        changes_applied
-      else
-        @previously_changed = changes
-        @changed_attributes.clear
-      end
-    end
-
-    def add_to_store
-      unless id
-        self.attribute_list = self.attribute_list.merge(id_key => self.class.next_id)
-      end
-      self.class.class_store.store self
     end
   end
   ActiveSupport.run_load_hooks(:memory_record, Base)
