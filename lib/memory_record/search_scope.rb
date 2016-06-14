@@ -70,7 +70,7 @@ module MemoryRecord
         elsif value.kind_of? Array
           add_filter ->(object){ value.include?(object.send(key)) }
         elsif value.kind_of? Hash
-          add_filter ->(object){ object.send(key).where(value).any? }
+          add_filter ->(object){ object.association(key).scope.where(value).all.any? }
         else
           add_filter ->(object){ object.send(key) == value }
         end
@@ -132,6 +132,15 @@ module MemoryRecord
     def merge(scope)
       self unless scope
       self.class.new(self)._add_filters(scope._filters)
+    end
+
+    def merge!(scope)
+      self._add_filters(scope._filters)
+      self
+    end
+
+    def get_scope
+      self
     end
 
     def method_missing(name, *args)

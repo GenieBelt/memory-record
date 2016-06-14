@@ -15,7 +15,7 @@ module MemoryRecord
         # association.
         attr_reader :base_klass, :children
 
-        delegate :store_name, :column_names, :primary_key, :to => :base_klass
+        delegate :store_name, :primary_key, :to => :base_klass
 
         def initialize(base_klass, children)
           @base_klass = base_klass
@@ -35,7 +35,7 @@ module MemoryRecord
           children.each { |child| child.each(&block) }
         end
 
-        # An Arel::Table for the memory_record
+        # An MemoryRecord::ObjectStore for the memory_record
         def table
           raise NotImplementedError
         end

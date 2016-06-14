@@ -14,10 +14,8 @@ module MemoryRecord
         def target_scope
           scope = super
           reflection.chain.drop(1).each do |reflection|
-            relation = reflection.klass.all
-            scope.merge!(
-              relation.except(:select, :create_with, :includes, :preload, :joins, :eager_load)
-            )
+            relation = reflection.klass.get_scope
+            scope.merge!(relation)
           end
           scope
         end

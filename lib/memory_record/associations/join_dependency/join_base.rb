@@ -10,7 +10,7 @@ module MemoryRecord
         end
 
         def table
-          base_klass.arel_table
+          base_klass.class_store
         end
 
         def aliased_table_name

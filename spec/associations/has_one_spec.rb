@@ -133,4 +133,34 @@ describe 'has_one association' do
       end
     end
   end
+
+  context 'through' do
+    before(:all) do
+      undefine_class :Human, :Foot, :Leg
+      class Human < MemoryRecord::Base
+        attributes id: Integer
+        has_one :leg
+      end
+      class Leg < MemoryRecord::Base
+        attributes id: Integer, human_id: Integer
+        belongs_to :human
+        has_one :foot
+      end
+      class Foot < MemoryRecord::Base
+        attributes id: Integer, leg_id: Integer
+        belongs_to :leg
+        has_one :human, through: :leg
+      end
+    end
+
+    it 'should read proper value' do
+      human = Human.create!
+      leg = Leg.create! human: human
+      foot = Foot.create leg: leg
+
+      expect(foot.leg).to eq leg
+      expect(leg.human).to eq human
+      expect(foot.human).to eq human
+    end
+  end
 end

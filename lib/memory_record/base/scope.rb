@@ -1,5 +1,5 @@
 require 'memory_record/logger'
-require 'memory_record/base/search_scope'
+require 'memory_record/search_scope'
 module MemoryRecord
   module Scope
     def self.included(base)
