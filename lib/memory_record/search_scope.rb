@@ -71,6 +71,8 @@ module MemoryRecord
           add_filter ->(object){ value.include?(object.send(key)) }
         elsif value.kind_of? Hash
           add_filter ->(object){ object.association(key).scope.where(value).all.any? }
+        elsif value.kind_of? MemoryRecord::SearchScope
+          add_filter ->(object){ object.association(key).scope.merge(value).all.any? }
         else
           add_filter ->(object){ object.send(key) == value }
         end

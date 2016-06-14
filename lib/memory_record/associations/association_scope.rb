@@ -21,8 +21,7 @@ module MemoryRecord
         reflection = association.reflection
         scope = klass.unscoped
         owner = association.owner
-        #alias_tracker = AliasTracker.create nil, association.klass.store_name, klass.type_caster
-        chain_head, chain_tail = get_chain(reflection, association, nil)
+        chain_head, chain_tail = get_chain(reflection, association)
 
         scope.extending! Array(reflection.options[:extend])
         add_constraints(scope, owner, klass, reflection, chain_head, chain_tail)
@@ -107,13 +106,11 @@ module MemoryRecord
         def all_includes; nil; end
       end
 
-      def get_chain(reflection, association, tracker)
-        name = reflection.name
+      def get_chain(reflection, association)
         runtime_reflection = Reflection::RuntimeReflection.new(reflection, association)
         previous_reflection = runtime_reflection
         reflection.chain.drop(1).each do |refl|
-          #alias_name = tracker.aliased_table_for(refl.store_name, refl.alias_candidate(name))
-          alias_name = nil
+          alias_name = refl.name
           proxy = ReflectionProxy.new(refl, alias_name)
           previous_reflection.next = proxy
           previous_reflection = proxy
