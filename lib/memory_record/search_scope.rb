@@ -4,6 +4,8 @@ module MemoryRecord
     attr_accessor :extending_values
     private :extending_values, :extending_values=
 
+    class OneScope < Array; end
+
     class << self
       def [](name)
         init_scopes
@@ -70,7 +72,7 @@ module MemoryRecord
         elsif value.kind_of? Array
           add_filter ->(object){ value.include?(object.send(key)) }
         elsif value.kind_of? Hash
-          add_filter ->(object){ object.association(key).scope.where(value).all.any? }
+          add_filter ->(object){ hash_search object, key, value}
         elsif value.kind_of? MemoryRecord::SearchScope
           add_filter ->(object){ object.association(key).scope.merge(value).all.any? }
         else
@@ -176,17 +178,25 @@ module MemoryRecord
       self
     end
 
-    private
+    protected
+
+    def hash_search(object, key, value)
+      object.association(key).scope.where(value).all.any?
+    end
 
     def base_scope
       if @base_scope && @base_scope.first && @base_scope.first.kind_of?(self.class)
         @base_scope.first.all
+      elsif @base_scope && @base_scope.first && @base_scope.first.kind_of?(OneScope)
+        @base_scope.first
       elsif @base_scope
         base_class.send(*@base_scope)
       else
         base_class._all
       end
     end
+
+    private
 
     def apply_filters
       if @filters.empty?

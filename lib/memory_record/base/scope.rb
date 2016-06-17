@@ -146,6 +146,10 @@ end
         return false
       end
     end
+
+    def scope
+      self.class.scope_class.new(SearchScope::OneScope.new([self]))
+    end
   end
 end
 

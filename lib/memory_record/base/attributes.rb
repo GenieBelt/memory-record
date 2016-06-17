@@ -16,7 +16,7 @@ module MemoryRecord
       end
 
       def has_attribute?(name)
-        @attributes.include?(name.to_sym)
+        @attributes && @attributes.include?(name.to_sym)
       end
 
       private

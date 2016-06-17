@@ -21,6 +21,10 @@ module MemoryRecord
         @store = Hash.new
       end
     end
+
+    def name
+      nil
+    end
   end
 
   class ObjectStore < Store
@@ -29,6 +33,7 @@ module MemoryRecord
       @clazz = clazz
       @foreign_keys = Hash.new
       @index_list = Hash.new
+      @name = clazz.to_s.underscore.gsub('/', '.')
       super()
     end
 
@@ -57,6 +62,10 @@ module MemoryRecord
           end
         end
       end
+    end
+
+    def name
+      @name
     end
 
     # @return [Object]
