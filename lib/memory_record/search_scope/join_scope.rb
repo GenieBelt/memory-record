@@ -1,3 +1,5 @@
+require 'memory_record/errors'
+
 module MemoryRecord
   class SearchScope
     class JoinPart
@@ -8,11 +10,24 @@ module MemoryRecord
       end
 
       def respond_to?(method)
+        super ||
         if @keys.include?(method.to_sym) && method.to_sym != @base
           true
         else
           @result[@base].respond_to?(method)
         end
+      end
+
+      def ==(other)
+        if other.kind_of? JoinPart
+          super
+        else
+          @result[@base] == other
+        end
+      end
+
+      def ===(other)
+        @result.values.select { |object| object == other }.any?
       end
 
       def method_missing(method, *args)
@@ -63,40 +78,40 @@ module MemoryRecord
         left.each do |left_object|
           left_value = left_object.send(left_key)
           if left_value.nil? && include_nil
-            product << {left_name => left_object, right_name => nil }
+            product << JoinPart.new(base_name, left_name => left_object, right_name => nil )
           elsif left_value
             matches = right.select { |object| object.send(right_key) == left_value }
             if matches.any?
               if self.distinct
-                product << {left_name => left_object, right_name => matches.first }
+                product << JoinPart.new(base_name, left_name => left_object, right_name => matches.first )
               else
                 matches.each do |right_object|
-                  product << {left_name => left_object, right_name => right_object }
+                  product << JoinPart.new(base_name, left_name => left_object, right_name => right_object )
                 end
               end
             elsif include_nil
               product << JoinPart.new(base_name, left_name => left_object, right_name => nil)
             end
           end
-          product
         end
+        product
       end
 
       def get_store(object)
-        if object.kind_of?(SearchScope) || object.kind_of?(MemoryRecord.base)|| object.kind_of?(MemoryRecord::Store)
+        if object.kind_of?(SearchScope) || (object.kind_of?(Class) && object < MemoryRecord::Base)|| object.kind_of?(MemoryRecord::Store)
           object.all
         else
-          raise StatementInvalid 'wrong type for join'
+          raise StatementInvalid, 'wrong type for join'
         end
       end
 
       def get_store_name(object)
-        if object.kind_of?(SearchScope) || object.kind_of?(MemoryRecord.base)
+        if object.kind_of?(SearchScope) || (object.kind_of?(Class) && object < MemoryRecord::Base)
           object.store_name.to_sym
         elsif object.kind_of?(MemoryRecord::Store)
           object.name.to_sym
         else
-          raise StatementInvalid 'wrong type for join'
+          raise StatementInvalid, 'wrong type for join'
         end
       end
     end

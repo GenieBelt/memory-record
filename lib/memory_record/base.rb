@@ -47,6 +47,10 @@ module MemoryRecord
         @store
       end
 
+      def store_name
+        class_store.name
+      end
+
       def main_store
         @@main_store
       end
