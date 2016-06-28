@@ -20,7 +20,11 @@ module MemoryRecord
       end
 
       def _join(base_key, foreign_store, foreign_key)
-        Join.new(self, base_key, foreign_store, foreign_key)
+        if @join
+          Join.new(@join, base_key, foreign_key, foreign_store)
+        else
+          Join.new(self, base_key, foreign_store, foreign_key)
+        end
       end
 
       protected

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'memory_record/search_scope/join_scope'
+require 'memory_record/search_scope/joins'
 
 describe 'JoinPart' do
 

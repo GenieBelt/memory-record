@@ -1,4 +1,5 @@
 require 'memory_record/logger'
+require 'memory_record/search_scope/joins'
 module MemoryRecord
   class SearchScope
     attr_accessor :extending_values
@@ -260,7 +261,10 @@ module MemoryRecord
         @base_class = clazz
       end
     end
+
+    include Joins
   end
+
 
   module ArrayExtensions
     def ==(other)

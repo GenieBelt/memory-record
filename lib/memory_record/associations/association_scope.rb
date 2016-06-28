@@ -84,14 +84,14 @@ module MemoryRecord
         key = join_keys.key
         foreign_key = join_keys.foreign_key
 
-        constraint = table[key].eq(foreign_table[foreign_key])
 
+        join = scope._join()
         if reflection.type
           value = transform_value(next_reflection.klass.base_class.name)
           scope = scope.where(table.name => { reflection.type => value })
         end
 
-        scope = scope.joins()
+        scope = scope.joins(join)
       end
 
       class ReflectionProxy < SimpleDelegator # :nodoc:
