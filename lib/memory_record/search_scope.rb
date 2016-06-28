@@ -69,14 +69,19 @@ module MemoryRecord
       params.each do |key, value|
         if value.kind_of? Range
           add_filter ->(object){ object.send(key) >= value.first &&  object.send(key) <= value.last }
+          add_description "#{key} between #{value.to_s}"
         elsif value.kind_of? Array
           add_filter ->(object){ value.include?(object.send(key)) }
+          add_description "#{key} in (#{value.map(&:to_s).join(', ') })"
         elsif value.kind_of? Hash
           add_filter ->(object){ hash_search object, key, value}
+          add_description "#{key} => #{value}"
         elsif value.kind_of? MemoryRecord::SearchScope
           add_filter ->(object){ object.association(key).scope.merge(value).all.any? }
+          add_description "#{key} => #{value.inspect}"
         else
           add_filter ->(object){ object.send(key) == value }
+          add_description "#{key} == #{value}"
         end
       end
       self
@@ -87,12 +92,16 @@ module MemoryRecord
       params.each do |key, value|
         if value.kind_of? Range
           add_filter ->(object){ object.send(key) < value.first ||  object.send(key) > value.last }
+          add_description "#{key} not between #{value.to_s}"
         elsif value.kind_of? Array
           add_filter ->(object){ !(value.include?(object.send(key))) }
+          add_description "#{key} not in (#{value.map(&:to_s).join(', ') })"
         elsif value.kind_of? Hash
-          add_filter ->(object){ object.send(key).where(value).empty? }
+          add_filter ->(object){ !(hash_search object, key, value) }
+          add_description "#{key} => #{value}"
         else
           add_filter ->(object){ object.send(key) != value }
+          add_description "#{key} != #{value}"
         end
       end
       self
@@ -178,7 +187,24 @@ module MemoryRecord
       self
     end
 
+    def inspect
+      str = "#<#{self.class.name}:#{self.object_id}>"
+      if @description
+        str << ' '
+        str << @description.join('; ')
+      end
+      if @limit
+        str << " limit: #{@limit}"
+      end
+      str
+    end
+
     protected
+
+    def add_description(string)
+      @description ||= []
+      @description << string
+    end
 
     def hash_search(object, key, value)
       object.association(key).scope.where(value).all.any?

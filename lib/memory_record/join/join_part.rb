@@ -35,9 +35,18 @@ module MemoryRecord
       end
     end
 
+    def _result
+      @result
+    end
+
     def merge(new_values)
-      @result.merge! new_values
+      if new_values.kind_of?(JoinPart)
+        @result.merge! new_values._result
+      else
+        @result.merge! new_values
+      end
       @keys = @result.keys.map(&:to_sym)
+      self
     end
   end
 end

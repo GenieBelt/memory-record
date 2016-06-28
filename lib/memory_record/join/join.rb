@@ -37,7 +37,7 @@ module MemoryRecord
 
     def make_cross(left, left_name, left_key,  right, right_name, right_key)
       include_nil = (@type == :outer)
-      product = JoinResult.new()
+      product = JoinResult.new(base_name)
       left.each do |left_object|
         left_value = left_object.send(left_key)
         if left_value.nil? && include_nil
@@ -73,6 +73,10 @@ module MemoryRecord
     def get_store(object)
       if object.kind_of?(SearchScope) || (object.kind_of?(Class) && object < MemoryRecord::Base)|| object.kind_of?(MemoryRecord::Store)
         object.all
+      elsif object.kind_of?(JoinResult)
+        object
+      elsif object.kind_of?(Join)
+        object.product
       else
         raise StatementInvalid, 'wrong type for join'
       end
@@ -83,6 +87,8 @@ module MemoryRecord
         object.store_name.to_sym
       elsif object.kind_of?(MemoryRecord::Store)
         object.name.to_sym
+      elsif object.kind_of?(JoinResult) || object.kind_of?(Join)
+        object.base_name
       else
         raise StatementInvalid, 'wrong type for join'
       end
