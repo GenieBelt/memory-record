@@ -37,7 +37,7 @@ module MemoryRecord
 
     def merge(new_values)
       @result.merge! new_values
-      @keys = @result.keys.(&:to_sym)
+      @keys = @result.keys.map(&:to_sym)
     end
   end
 end

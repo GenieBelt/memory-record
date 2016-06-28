@@ -22,6 +22,7 @@ describe 'Join' do
     join = MemoryRecord::Join.new(AJoinTest, :name, BJoinTest, :name)
     product = join.product
     expect(product).to be_kind_of Array
+    expect(product).to be_kind_of MemoryRecord::JoinResult
     expect(product.first).to be_kind_of MemoryRecord::JoinPart
     expect(product.first.b_join_test).to be_kind_of BJoinTest
     expect(product.count).to eq 2
