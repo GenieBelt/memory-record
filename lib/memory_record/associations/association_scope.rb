@@ -120,6 +120,7 @@ module MemoryRecord
 
       def add_constraints(scope, owner, association_klass, refl, chain_head, chain_tail)
         owner_reflection = chain_tail
+        store_name = owner_reflection.alias_name
         scope = last_chain_scope(scope, owner_reflection, owner, association_klass)
 
         reflection = chain_head
